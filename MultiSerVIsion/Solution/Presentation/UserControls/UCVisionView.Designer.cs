@@ -28,378 +28,226 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.lblImgStatus = new System.Windows.Forms.Label();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCVisionView));
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.grpCerameImg4 = new System.Windows.Forms.GroupBox();
-            this.grpCerameImg3 = new System.Windows.Forms.GroupBox();
-            this.grpCerameImg2 = new System.Windows.Forms.GroupBox();
-            this.grpCerameImg1 = new System.Windows.Forms.GroupBox();
-            this.picVisionImg = new System.Windows.Forms.PictureBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
-            this.cbxProtocolType = new System.Windows.Forms.ComboBox();
-            this.numericUpDown6 = new System.Windows.Forms.NumericUpDown();
-            this.nudGain = new System.Windows.Forms.NumericUpDown();
-            this.lblFrameRate = new System.Windows.Forms.Label();
-            this.lblRIO = new System.Windows.Forms.Label();
-            this.lblLightVakue = new System.Windows.Forms.Label();
-            this.lblTriggerMode = new System.Windows.Forms.Label();
-            this.lblGain = new System.Windows.Forms.Label();
-            this.lblExposure = new System.Windows.Forms.Label();
-            this.nudExposure = new System.Windows.Forms.NumericUpDown();
-            this.cbxTriggerMode = new System.Windows.Forms.ComboBox();
-            this.trackLight = new System.Windows.Forms.TrackBar();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.btnSingleGrab = new System.Windows.Forms.Button();
-            this.btnContinuousGrab = new System.Windows.Forms.Button();
-            this.btnStopGrab = new System.Windows.Forms.Button();
-            this.btnSaveImage = new System.Windows.Forms.Button();
-            this.btnClearImg = new System.Windows.Forms.Button();
-            this.tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.tableLayoutPanel2.SuspendLayout();
-            this.grpCerameImg1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picVisionImg)).BeginInit();
-            this.groupBox5.SuspendLayout();
-            this.tableLayoutPanel3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown6)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudGain)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudExposure)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.trackLight)).BeginInit();
+            this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
+            this.toolStrip2.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Controls.Add(this.lblImgStatus, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.splitContainer1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 2);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(8, 8);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.Padding = new System.Windows.Forms.Padding(8);
-            this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1129, 712);
-            this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // lblImgStatus
-            // 
-            this.lblImgStatus.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblImgStatus.AutoSize = true;
-            this.lblImgStatus.Location = new System.Drawing.Point(11, 31);
-            this.lblImgStatus.Name = "lblImgStatus";
-            this.lblImgStatus.Size = new System.Drawing.Size(382, 24);
-            this.lblImgStatus.TabIndex = 0;
-            this.lblImgStatus.Text = "图像状态:无图像/采集中/取图失败";
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(11, 81);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel2);
-            this.splitContainer1.Panel1MinSize = 0;
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.groupBox5);
-            this.splitContainer1.Panel2MinSize = 0;
-            this.splitContainer1.Size = new System.Drawing.Size(1107, 560);
-            this.splitContainer1.SplitterDistance = 780;
-            this.splitContainer1.TabIndex = 1;
             // 
             // tableLayoutPanel2
             // 
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Controls.Add(this.grpCerameImg4, 1, 1);
-            this.tableLayoutPanel2.Controls.Add(this.grpCerameImg3, 0, 1);
-            this.tableLayoutPanel2.Controls.Add(this.grpCerameImg2, 1, 0);
-            this.tableLayoutPanel2.Controls.Add(this.grpCerameImg1, 0, 0);
-            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.groupBox4, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(this.groupBox3, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.groupBox2, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.groupBox1, 0, 0);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 48);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(780, 560);
-            this.tableLayoutPanel2.TabIndex = 0;
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(1107, 626);
+            this.tableLayoutPanel2.TabIndex = 3;
             // 
-            // grpCerameImg4
+            // groupBox4
             // 
-            this.grpCerameImg4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpCerameImg4.Location = new System.Drawing.Point(393, 283);
-            this.grpCerameImg4.Name = "grpCerameImg4";
-            this.grpCerameImg4.Size = new System.Drawing.Size(384, 274);
-            this.grpCerameImg4.TabIndex = 3;
-            this.grpCerameImg4.TabStop = false;
-            this.grpCerameImg4.Text = "相机4";
+            this.groupBox4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox4.Location = new System.Drawing.Point(556, 316);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Padding = new System.Windows.Forms.Padding(0);
+            this.groupBox4.Size = new System.Drawing.Size(548, 307);
+            this.groupBox4.TabIndex = 3;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "相机4";
             // 
-            // grpCerameImg3
+            // groupBox3
             // 
-            this.grpCerameImg3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpCerameImg3.Location = new System.Drawing.Point(3, 283);
-            this.grpCerameImg3.Name = "grpCerameImg3";
-            this.grpCerameImg3.Size = new System.Drawing.Size(384, 274);
-            this.grpCerameImg3.TabIndex = 2;
-            this.grpCerameImg3.TabStop = false;
-            this.grpCerameImg3.Text = "相机3";
+            this.groupBox3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox3.Location = new System.Drawing.Point(3, 316);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Padding = new System.Windows.Forms.Padding(0);
+            this.groupBox3.Size = new System.Drawing.Size(547, 307);
+            this.groupBox3.TabIndex = 2;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "相机3";
             // 
-            // grpCerameImg2
+            // groupBox2
             // 
-            this.grpCerameImg2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpCerameImg2.Location = new System.Drawing.Point(393, 3);
-            this.grpCerameImg2.Name = "grpCerameImg2";
-            this.grpCerameImg2.Size = new System.Drawing.Size(384, 274);
-            this.grpCerameImg2.TabIndex = 1;
-            this.grpCerameImg2.TabStop = false;
-            this.grpCerameImg2.Text = "相机2";
+            this.groupBox2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox2.Location = new System.Drawing.Point(556, 3);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(0);
+            this.groupBox2.Size = new System.Drawing.Size(548, 307);
+            this.groupBox2.TabIndex = 1;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "相机2";
             // 
-            // grpCerameImg1
+            // groupBox1
             // 
-            this.grpCerameImg1.Controls.Add(this.picVisionImg);
-            this.grpCerameImg1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpCerameImg1.Location = new System.Drawing.Point(3, 3);
-            this.grpCerameImg1.Name = "grpCerameImg1";
-            this.grpCerameImg1.Size = new System.Drawing.Size(384, 274);
-            this.grpCerameImg1.TabIndex = 0;
-            this.grpCerameImg1.TabStop = false;
-            this.grpCerameImg1.Text = "相机1";
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox1.Location = new System.Drawing.Point(3, 3);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(0);
+            this.groupBox1.Size = new System.Drawing.Size(547, 307);
+            this.groupBox1.TabIndex = 0;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "相机1";
             // 
-            // picVisionImg
+            // tableLayoutPanel1
             // 
-            this.picVisionImg.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.picVisionImg.Location = new System.Drawing.Point(3, 31);
-            this.picVisionImg.Name = "picVisionImg";
-            this.picVisionImg.Size = new System.Drawing.Size(378, 240);
-            this.picVisionImg.TabIndex = 0;
-            this.picVisionImg.TabStop = false;
-            // 
-            // groupBox5
-            // 
-            this.groupBox5.Controls.Add(this.tableLayoutPanel3);
-            this.groupBox5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox5.Location = new System.Drawing.Point(0, 0);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(323, 560);
-            this.groupBox5.TabIndex = 1;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "相机配置";
-            // 
-            // tableLayoutPanel3
-            // 
-            this.tableLayoutPanel3.ColumnCount = 2;
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel3.Controls.Add(this.cbxProtocolType, 1, 4);
-            this.tableLayoutPanel3.Controls.Add(this.numericUpDown6, 1, 5);
-            this.tableLayoutPanel3.Controls.Add(this.nudGain, 1, 1);
-            this.tableLayoutPanel3.Controls.Add(this.lblFrameRate, 0, 5);
-            this.tableLayoutPanel3.Controls.Add(this.lblRIO, 0, 4);
-            this.tableLayoutPanel3.Controls.Add(this.lblLightVakue, 0, 3);
-            this.tableLayoutPanel3.Controls.Add(this.lblTriggerMode, 0, 2);
-            this.tableLayoutPanel3.Controls.Add(this.lblGain, 0, 1);
-            this.tableLayoutPanel3.Controls.Add(this.lblExposure, 0, 0);
-            this.tableLayoutPanel3.Controls.Add(this.nudExposure, 1, 0);
-            this.tableLayoutPanel3.Controls.Add(this.cbxTriggerMode, 1, 2);
-            this.tableLayoutPanel3.Controls.Add(this.trackLight, 1, 3);
-            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 31);
-            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 6;
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(317, 526);
-            this.tableLayoutPanel3.TabIndex = 0;
-            // 
-            // cbxProtocolType
-            // 
-            this.cbxProtocolType.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.cbxProtocolType.FormattingEnabled = true;
-            this.cbxProtocolType.Location = new System.Drawing.Point(161, 375);
-            this.cbxProtocolType.Name = "cbxProtocolType";
-            this.cbxProtocolType.Size = new System.Drawing.Size(121, 32);
-            this.cbxProtocolType.TabIndex = 19;
-            // 
-            // numericUpDown6
-            // 
-            this.numericUpDown6.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numericUpDown6.Location = new System.Drawing.Point(161, 463);
-            this.numericUpDown6.Name = "numericUpDown6";
-            this.numericUpDown6.Size = new System.Drawing.Size(120, 35);
-            this.numericUpDown6.TabIndex = 16;
-            // 
-            // nudGain
-            // 
-            this.nudGain.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.nudGain.Location = new System.Drawing.Point(161, 113);
-            this.nudGain.Name = "nudGain";
-            this.nudGain.Size = new System.Drawing.Size(120, 35);
-            this.nudGain.TabIndex = 12;
-            // 
-            // lblFrameRate
-            // 
-            this.lblFrameRate.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblFrameRate.AutoSize = true;
-            this.lblFrameRate.Location = new System.Drawing.Point(3, 468);
-            this.lblFrameRate.Name = "lblFrameRate";
-            this.lblFrameRate.Size = new System.Drawing.Size(58, 24);
-            this.lblFrameRate.TabIndex = 10;
-            this.lblFrameRate.Text = "帧率";
-            // 
-            // lblRIO
-            // 
-            this.lblRIO.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblRIO.AutoSize = true;
-            this.lblRIO.Location = new System.Drawing.Point(3, 379);
-            this.lblRIO.Name = "lblRIO";
-            this.lblRIO.Size = new System.Drawing.Size(94, 24);
-            this.lblRIO.TabIndex = 8;
-            this.lblRIO.Text = "ROI区域";
-            // 
-            // lblLightVakue
-            // 
-            this.lblLightVakue.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblLightVakue.AutoSize = true;
-            this.lblLightVakue.Location = new System.Drawing.Point(3, 292);
-            this.lblLightVakue.Name = "lblLightVakue";
-            this.lblLightVakue.Size = new System.Drawing.Size(106, 24);
-            this.lblLightVakue.TabIndex = 6;
-            this.lblLightVakue.Text = "光源亮度";
-            // 
-            // lblTriggerMode
-            // 
-            this.lblTriggerMode.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblTriggerMode.AutoSize = true;
-            this.lblTriggerMode.Location = new System.Drawing.Point(3, 205);
-            this.lblTriggerMode.Name = "lblTriggerMode";
-            this.lblTriggerMode.Size = new System.Drawing.Size(106, 24);
-            this.lblTriggerMode.TabIndex = 4;
-            this.lblTriggerMode.Text = "触发模式";
-            // 
-            // lblGain
-            // 
-            this.lblGain.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblGain.AutoSize = true;
-            this.lblGain.Location = new System.Drawing.Point(3, 118);
-            this.lblGain.Name = "lblGain";
-            this.lblGain.Size = new System.Drawing.Size(58, 24);
-            this.lblGain.TabIndex = 2;
-            this.lblGain.Text = "增益";
-            // 
-            // lblExposure
-            // 
-            this.lblExposure.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblExposure.AutoSize = true;
-            this.lblExposure.Location = new System.Drawing.Point(3, 31);
-            this.lblExposure.Name = "lblExposure";
-            this.lblExposure.Size = new System.Drawing.Size(58, 24);
-            this.lblExposure.TabIndex = 0;
-            this.lblExposure.Text = "曝光";
-            // 
-            // nudExposure
-            // 
-            this.nudExposure.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.nudExposure.Location = new System.Drawing.Point(161, 26);
-            this.nudExposure.Name = "nudExposure";
-            this.nudExposure.Size = new System.Drawing.Size(120, 35);
-            this.nudExposure.TabIndex = 11;
-            // 
-            // cbxTriggerMode
-            // 
-            this.cbxTriggerMode.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.cbxTriggerMode.FormattingEnabled = true;
-            this.cbxTriggerMode.Location = new System.Drawing.Point(161, 201);
-            this.cbxTriggerMode.Name = "cbxTriggerMode";
-            this.cbxTriggerMode.Size = new System.Drawing.Size(121, 32);
-            this.cbxTriggerMode.TabIndex = 17;
-            // 
-            // trackLight
-            // 
-            this.trackLight.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.trackLight.Location = new System.Drawing.Point(161, 264);
-            this.trackLight.Name = "trackLight";
-            this.trackLight.Size = new System.Drawing.Size(153, 81);
-            this.trackLight.TabIndex = 18;
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.toolStrip2, 0, 2);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 48F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 48F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1139, 722);
+            this.tableLayoutPanel1.TabIndex = 4;
             // 
             // flowLayoutPanel1
             // 
-            this.flowLayoutPanel1.Controls.Add(this.btnSingleGrab);
-            this.flowLayoutPanel1.Controls.Add(this.btnContinuousGrab);
-            this.flowLayoutPanel1.Controls.Add(this.btnStopGrab);
-            this.flowLayoutPanel1.Controls.Add(this.btnSaveImage);
-            this.flowLayoutPanel1.Controls.Add(this.btnClearImg);
+            this.flowLayoutPanel1.Controls.Add(this.toolStrip1);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(11, 647);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 3);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1107, 54);
-            this.flowLayoutPanel1.TabIndex = 2;
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1133, 42);
+            this.flowLayoutPanel1.TabIndex = 4;
             // 
-            // btnSingleGrab
+            // toolStrip1
             // 
-            this.btnSingleGrab.Location = new System.Drawing.Point(3, 3);
-            this.btnSingleGrab.Name = "btnSingleGrab";
-            this.btnSingleGrab.Size = new System.Drawing.Size(120, 51);
-            this.btnSingleGrab.TabIndex = 0;
-            this.btnSingleGrab.Text = "单张取图";
-            this.btnSingleGrab.UseVisualStyleBackColor = true;
+            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(32, 32);
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButton1,
+            this.toolStripButton2,
+            this.toolStripButton3,
+            this.toolStripButton4,
+            this.toolStripButton5});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(252, 42);
+            this.toolStrip1.TabIndex = 0;
+            this.toolStrip1.Text = "toolStrip1";
             // 
-            // btnContinuousGrab
+            // toolStripButton1
             // 
-            this.btnContinuousGrab.Location = new System.Drawing.Point(129, 3);
-            this.btnContinuousGrab.Name = "btnContinuousGrab";
-            this.btnContinuousGrab.Size = new System.Drawing.Size(120, 51);
-            this.btnContinuousGrab.TabIndex = 1;
-            this.btnContinuousGrab.Text = "连续采集";
-            this.btnContinuousGrab.UseVisualStyleBackColor = true;
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton1.ForeColor = System.Drawing.Color.Lime;
+            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(46, 36);
+            this.toolStripButton1.Text = "开始采图";
             // 
-            // btnStopGrab
+            // toolStripButton2
             // 
-            this.btnStopGrab.Location = new System.Drawing.Point(255, 3);
-            this.btnStopGrab.Name = "btnStopGrab";
-            this.btnStopGrab.Size = new System.Drawing.Size(120, 51);
-            this.btnStopGrab.TabIndex = 2;
-            this.btnStopGrab.Text = "停止采图";
-            this.btnStopGrab.UseVisualStyleBackColor = true;
+            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton2.ForeColor = System.Drawing.Color.Red;
+            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
+            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton2.Name = "toolStripButton2";
+            this.toolStripButton2.Size = new System.Drawing.Size(46, 36);
+            this.toolStripButton2.Text = "停止采图";
             // 
-            // btnSaveImage
+            // toolStripButton3
             // 
-            this.btnSaveImage.Location = new System.Drawing.Point(381, 3);
-            this.btnSaveImage.Name = "btnSaveImage";
-            this.btnSaveImage.Size = new System.Drawing.Size(120, 51);
-            this.btnSaveImage.TabIndex = 3;
-            this.btnSaveImage.Text = "保存图像";
-            this.btnSaveImage.UseVisualStyleBackColor = true;
+            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton3.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton3.Image")));
+            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton3.Name = "toolStripButton3";
+            this.toolStripButton3.Size = new System.Drawing.Size(46, 36);
+            this.toolStripButton3.Text = "单张采图";
             // 
-            // btnClearImg
+            // toolStrip2
             // 
-            this.btnClearImg.Location = new System.Drawing.Point(507, 3);
-            this.btnClearImg.Name = "btnClearImg";
-            this.btnClearImg.Size = new System.Drawing.Size(120, 51);
-            this.btnClearImg.TabIndex = 4;
-            this.btnClearImg.Text = "清空图像";
-            this.btnClearImg.UseVisualStyleBackColor = true;
+            this.toolStrip2.ImageScalingSize = new System.Drawing.Size(32, 32);
+            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
+            this.toolStripSeparator1,
+            this.toolStripLabel2,
+            this.toolStripLabel3,
+            this.toolStripLabel4});
+            this.toolStrip2.Location = new System.Drawing.Point(0, 674);
+            this.toolStrip2.Name = "toolStrip2";
+            this.toolStrip2.Size = new System.Drawing.Size(1139, 48);
+            this.toolStrip2.TabIndex = 5;
+            this.toolStrip2.Text = "toolStrip2";
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(62, 42);
+            this.toolStripLabel1.Text = "帧率";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 48);
+            // 
+            // toolStripLabel2
+            // 
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            this.toolStripLabel2.Size = new System.Drawing.Size(86, 42);
+            this.toolStripLabel2.Text = "图像数";
+            // 
+            // toolStripButton4
+            // 
+            this.toolStripButton4.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
+            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton4.Name = "toolStripButton4";
+            this.toolStripButton4.Size = new System.Drawing.Size(46, 36);
+            this.toolStripButton4.Text = "toolStripButton4";
+            // 
+            // toolStripButton5
+            // 
+            this.toolStripButton5.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton5.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton5.Image")));
+            this.toolStripButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton5.Name = "toolStripButton5";
+            this.toolStripButton5.Size = new System.Drawing.Size(46, 36);
+            this.toolStripButton5.Text = "toolStripButton5";
+            // 
+            // toolStripLabel3
+            // 
+            this.toolStripLabel3.Name = "toolStripLabel3";
+            this.toolStripLabel3.Size = new System.Drawing.Size(62, 42);
+            this.toolStripLabel3.Text = "带宽";
+            // 
+            // toolStripLabel4
+            // 
+            this.toolStripLabel4.Name = "toolStripLabel4";
+            this.toolStripLabel4.Size = new System.Drawing.Size(86, 42);
+            this.toolStripLabel4.Text = "分辨率";
             // 
             // UCVisionView
             // 
@@ -407,58 +255,41 @@
             this.AutoSize = true;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "UCVisionView";
+            this.Padding = new System.Windows.Forms.Padding(3);
             this.Size = new System.Drawing.Size(1145, 728);
+            this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.tableLayoutPanel2.ResumeLayout(false);
-            this.grpCerameImg1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.picVisionImg)).EndInit();
-            this.groupBox5.ResumeLayout(false);
-            this.tableLayoutPanel3.ResumeLayout(false);
-            this.tableLayoutPanel3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown6)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudGain)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudExposure)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.trackLight)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            this.toolStrip2.ResumeLayout(false);
+            this.toolStrip2.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Label lblImgStatus;
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Button btnSingleGrab;
-        private System.Windows.Forms.Button btnContinuousGrab;
-        private System.Windows.Forms.Button btnStopGrab;
-        private System.Windows.Forms.Button btnSaveImage;
-        private System.Windows.Forms.Button btnClearImg;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
-        private System.Windows.Forms.GroupBox grpCerameImg4;
-        private System.Windows.Forms.GroupBox grpCerameImg3;
-        private System.Windows.Forms.GroupBox grpCerameImg2;
-        private System.Windows.Forms.GroupBox grpCerameImg1;
-        private System.Windows.Forms.GroupBox groupBox5;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
-        private System.Windows.Forms.PictureBox picVisionImg;
-        private System.Windows.Forms.Label lblFrameRate;
-        private System.Windows.Forms.Label lblRIO;
-        private System.Windows.Forms.Label lblLightVakue;
-        private System.Windows.Forms.Label lblTriggerMode;
-        private System.Windows.Forms.Label lblGain;
-        private System.Windows.Forms.Label lblExposure;
-        private System.Windows.Forms.NumericUpDown nudExposure;
-        private System.Windows.Forms.NumericUpDown numericUpDown6;
-        private System.Windows.Forms.NumericUpDown nudGain;
-        private System.Windows.Forms.ComboBox cbxTriggerMode;
-        private System.Windows.Forms.TrackBar trackLight;
-        private System.Windows.Forms.ComboBox cbxProtocolType;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton toolStripButton1;
+        private System.Windows.Forms.ToolStripButton toolStripButton2;
+        private System.Windows.Forms.ToolStripButton toolStripButton3;
+        private System.Windows.Forms.ToolStrip toolStrip2;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel2;
+        private System.Windows.Forms.ToolStripButton toolStripButton4;
+        private System.Windows.Forms.ToolStripButton toolStripButton5;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel3;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel4;
     }
 }

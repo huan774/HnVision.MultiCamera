@@ -1,108 +1,68 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
-using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Domain.Repositories;
+using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MultiSerVIsion.Solution.Domain.Entities
 {
-    public class CameraEntity
+    public class CameraEntity : DeviceEntity
     {
-        public Guid CameraId { get; }
-        public CameraDeviceDto DeviceInfo { get; private  set; }
+        public CameraAllConfig CameraAllConfig { get; set; }= new CameraAllConfig();
 
-        public CameraConnectConfig ConnectParam { get;private set;  }
-        public CameraStatus Status { get; private set; }
-        public int sdkHandle { get; private set; } = -1;
-        private readonly ICameraHardwareDriver _hardwareDriver;
+        [JsonIgnore]
+        public CameraStatus DetailStatus { get; /*protected*/ set; } = CameraStatus.Idle;
 
-        public CameraEntity(ICameraHardwareDriver hardwareDriver,CameraDeviceDto deviceInfo)
+        public override DeviceEntity ShallowClone()
         {
-            CameraId=Guid.NewGuid();
-            _hardwareDriver = hardwareDriver;
-            DeviceInfo = deviceInfo;
-            Status = CameraStatus.Idle;
+            var newCam=new CameraEntity();
+            CopyBaseFieldTo(newCam);
+
+            newCam.CameraAllConfig = this.CameraAllConfig;
+
+            newCam.Handle = -1;
+            newCam.ConnectionStatus = DeviceConnectionStatue.Disconnected;
+            newCam.DetailStatus = CameraStatus.Idle;
+            return newCam;
         }
-        public void BindConnectParam(CameraConnectConfig param)
+        
+        protected override ValidationResult ValidateDeviceSpecialRule()
         {
-            ConnectParam = param;
+            var connectParam=CameraAllConfig.ParamConfig;
+
+            if (connectParam.ExposureTime <= 0)
+            {
+                return ValidationResult.Failure("曝光需大于0");
+            }
+            return ValidationResult.Success();
         }
-        public OperationResult Connect()
+        public static CameraEntity CreateFormScanResult(CameraHardwareRawDto scanResult)
         {
-            if (Status != CameraStatus.Idle)
-                return OperationResult.Fail($"当前状态{Status}，禁止重复登录");
+            var cam=new CameraEntity();
+            cam.DeviceId = Guid.NewGuid().ToString("N");
+            cam.DeviceType = "Camera";
+            cam.DeviceName = $"相机_{scanResult.SerialNumber}";
+            cam.IpAddress = scanResult.IpAddress;
+            cam.GroupTage = "相机分组";
+            cam.IsEnable = true;
 
-            try
-            {
-                sdkHandle = _hardwareDriver.Login(ConnectParam);
-                Status = CameraStatus.Connected;
-                return OperationResult.Succes();
-
-            }
-            catch (Exception ex)
-            {
-                return OperationResult.Fail($"相机登录失败{ex.Message}");
-            }
+            cam.CameraAllConfig.ConnectConfig.SerialNumber = scanResult.SerialNumber;
+            cam.CameraAllConfig.ConnectConfig.InterfaceType = scanResult.InterfaceType;
+            
+            return cam;
         }
-        public OperationResult OpenStream()
-        {
-            if (Status != CameraStatus.Connected)
-                return OperationResult.Fail("请先登录连接相机，在开启取流");
+    }
+    public class CameraAllConfig
+    {
+      
+        public CameraConnectConfig ConnectConfig { get;  set; }=new CameraConnectConfig();
 
-            try
-            {
-                 _hardwareDriver.OpenStream(sdkHandle);
-                Status = CameraStatus.Connected;
-                return OperationResult.Succes();
-
-            }
-            catch (Exception ex)
-            {
-                return OperationResult.Fail($"开启取流失败{ex.Message}");
-            }
-        }
-        public OperationResult StopStream()
-        {
-            if (Status != CameraStatus.Streaming)
-                return OperationResult.Fail("相机未开始取流，无需关闭");
-
-            try
-            {
-                _hardwareDriver.CloseStream(sdkHandle);
-                Status = CameraStatus.Connected;
-                return OperationResult.Succes();
-
-            }
-            catch (Exception ex)
-            {
-                return OperationResult.Fail($"停止取流{ex.Message}");
-            }
-        }
-        public OperationResult Disconnect()
-        {
-            if (sdkHandle <= 0)
-            {
-                Status = CameraStatus.Idle;
-                return OperationResult.Succes();
-            }
-            try
-            {
-                StopStream();
-                _hardwareDriver.Logout(sdkHandle);
-                sdkHandle = -1;
-                Status = CameraStatus.Idle;
-                return OperationResult.Succes();
-
-            }
-            catch (Exception ex)
-            {
-                return OperationResult.Fail($"断开相机失败，{ex.Message}");
-            }
-        }
+        public CameraParamConfig ParamConfig { get; set; } = new CameraParamConfig();
     }
 }

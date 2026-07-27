@@ -80,7 +80,6 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
                         if (res.Success && res.Data != null)
                         {
                             _view.AddTreeNode(input.GroupTag, res.Data.DeviceId, res.Data.DeviceName);
-
                             _view.RefreshDeviceStatusIcon();
                         }
                         else
@@ -154,6 +153,5 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
                 _view.ShowMessage(res.Message);
             }
         }
-       
     }
 }

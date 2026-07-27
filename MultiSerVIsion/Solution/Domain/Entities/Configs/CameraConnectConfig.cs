@@ -9,25 +9,24 @@ namespace MultiSerVIsion.Solution.Domain.Entities.Configs
 {
     public class CameraConnectConfig
     {
-       
-        public int Port { get; set; } = 3956;               
-        public int DefaultExposureUs { get; set; } = 5000; 
-        public int DefaultGain { get; set; } = 8;          
-        public string TriggerDefaultMode { get; set; } = "Soft";
-        public string CameraType { get; set; } = "GigE";
-        public int TriggerChannel { get; set; } = 1;      
-        public bool AutoExposureDefault { get; set; } = false; 
-        public int ImageWidth { get; set; } = 1280;        
-        public int ImageHeight { get; set; } = 960;
+
+        public string SerialNumber { get; set; }   // 唯一标识，用来匹配硬件
+        public string IpAddress { get; set; }      // 目标IP
+        public int Port { get; set; }              // 通讯端口
+        public string InterfaceType { get; set; }  // 接口类型
+        public int ConnectTimeoutMs { get; set; }  // 连接超时
+                                                   // 部分品牌相机需要用户名密码
+        public string UserName { get; set; }
+        public string Password { get; set; }
 
     }
-    public class CameraRuntimeParam
+    public class CameraParamConfig
     {
-        public int RealTimeExposureUs { get; set; }         // 实时拖动曝光
-        public int RealTimeGain { get; set; }              // 实时拖动增益
-        public string TempTriggerMode { get; set; }         // 临时切换触发模式
-        public bool TempAutoExposure { get; set; }         // 临时开启自动曝光
-        public Rectangle TempRoi { get; set; }             // 临时裁剪ROI区域
-        public bool IsContinuousGrab { get; set; } = false; // 连续采集开关
+        public double ExposureTime { get; set; } = 1000;   // 曝光时间
+        public double Gain { get; set; } = 1.0;           // 增益
+        public string PixelFormat { get; set; } = "Mono8";   // 像素格式
+        public double FrameRate { get; set; } = 30;      // 帧率
+        public string TriggerMode { get; set; }="Continuous";    // 触发模式：连续/触发
+        public string TriggerSource { get; set; }  // 触发源：软触发/硬触发
     }
 }

@@ -39,6 +39,7 @@
             this.toolStripLabel7 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripLabel8 = new System.Windows.Forms.ToolStripLabel();
             this.split_outer = new System.Windows.Forms.SplitContainer();
+            this.split_Devicetree = new System.Windows.Forms.SplitContainer();
             this.split_inter = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -60,8 +61,11 @@
             this.panel1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.split_outer)).BeginInit();
+            this.split_outer.Panel1.SuspendLayout();
             this.split_outer.Panel2.SuspendLayout();
             this.split_outer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.split_Devicetree)).BeginInit();
+            this.split_Devicetree.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.split_inter)).BeginInit();
             this.split_inter.Panel1.SuspendLayout();
             this.split_inter.SuspendLayout();
@@ -110,8 +114,8 @@
             // toolStripLabel2
             // 
             this.toolStripLabel2.Name = "toolStripLabel2";
-            this.toolStripLabel2.Size = new System.Drawing.Size(110, 31);
-            this.toolStripLabel2.Text = "软件名称";
+            this.toolStripLabel2.Size = new System.Drawing.Size(129, 31);
+            this.toolStripLabel2.Text = "HNVision";
             // 
             // toolStripLabel3
             // 
@@ -159,6 +163,7 @@
             // 
             this.split_outer.Panel1.AllowDrop = true;
             this.split_outer.Panel1.AutoScroll = true;
+            this.split_outer.Panel1.Controls.Add(this.split_Devicetree);
             this.split_outer.Panel1MinSize = 180;
             // 
             // split_outer.Panel2
@@ -169,6 +174,16 @@
             this.split_outer.SplitterDistance = 220;
             this.split_outer.TabIndex = 1;
             // 
+            // split_Devicetree
+            // 
+            this.split_Devicetree.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.split_Devicetree.Location = new System.Drawing.Point(0, 0);
+            this.split_Devicetree.Name = "split_Devicetree";
+            this.split_Devicetree.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.split_Devicetree.Size = new System.Drawing.Size(220, 789);
+            this.split_Devicetree.SplitterDistance = 400;
+            this.split_Devicetree.TabIndex = 0;
+            // 
             // split_inter
             // 
             this.split_inter.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -178,6 +193,10 @@
             // split_inter.Panel1
             // 
             this.split_inter.Panel1.Controls.Add(this.splitContainer2);
+            // 
+            // split_inter.Panel2
+            // 
+            this.split_inter.Panel2.AutoScroll = true;
             this.split_inter.Size = new System.Drawing.Size(1150, 789);
             this.split_inter.SplitterDistance = 1000;
             this.split_inter.TabIndex = 1;
@@ -194,13 +213,14 @@
             // 
             this.splitContainer2.Panel1.AllowDrop = true;
             this.splitContainer2.Panel1.Controls.Add(this.tabControl1);
+            this.splitContainer2.Panel1MinSize = 600;
             // 
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.AllowDrop = true;
             this.splitContainer2.Panel2.Controls.Add(this.richTextBox1);
             this.splitContainer2.Panel2.Controls.Add(this.statusStrip1);
-            this.splitContainer2.Panel2MinSize = 100;
+            this.splitContainer2.Panel2MinSize = 0;
             this.splitContainer2.Size = new System.Drawing.Size(1000, 789);
             this.splitContainer2.SplitterDistance = 685;
             this.splitContainer2.TabIndex = 0;
@@ -307,6 +327,7 @@
             this.richTextBox1.Size = new System.Drawing.Size(1000, 59);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
+            this.richTextBox1.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
             // 
             // statusStrip1
             // 
@@ -365,7 +386,7 @@
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "HyVision  V1.0.0";
+            this.Text = "HnVision  V1.0.0";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -373,9 +394,12 @@
             this.panel1.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.split_outer.Panel1.ResumeLayout(false);
             this.split_outer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.split_outer)).EndInit();
             this.split_outer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.split_Devicetree)).EndInit();
+            this.split_Devicetree.ResumeLayout(false);
             this.split_inter.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.split_inter)).EndInit();
             this.split_inter.ResumeLayout(false);
@@ -422,6 +446,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel4;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel6;
         private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.SplitContainer split_Devicetree;
     }
 }
 

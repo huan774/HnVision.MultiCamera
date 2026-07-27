@@ -16,7 +16,7 @@ namespace MultiSerVIsion.Solution.Application.Dtos
         public string IpAddress {  get; set; } = string.Empty;
         public bool IsEnable {  get; set; }
 
-        public PlcconnectConfig PlcConfig { get; set; }
+      
         public CameraConnectConfig CameraConfig { get; set; }
         public MotionCardConnectConfig MotionCardConfig { get; set; }
     }

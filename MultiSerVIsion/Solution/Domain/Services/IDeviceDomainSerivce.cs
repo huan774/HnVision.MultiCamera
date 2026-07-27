@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MultiSerVIsion.Solution.Domain.Entities;
-using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Shared.Models;
 
 namespace MultiSerVIsion.Solution.Domain.Services

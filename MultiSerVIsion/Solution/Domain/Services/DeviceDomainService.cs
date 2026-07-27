@@ -1,5 +1,4 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities;
-using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Infrastructure.Repository;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;

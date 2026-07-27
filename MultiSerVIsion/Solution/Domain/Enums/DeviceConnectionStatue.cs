@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace MultiSerVIsion.Solution.Domain.Enums
 {
-    public enum CameraStatus
+    public enum DeviceConnectionStatue
     {
         Idle,
         Disconnected,
         Connected,
+        Running,
         Streaming,
         Error,
-        
+
     }
 }

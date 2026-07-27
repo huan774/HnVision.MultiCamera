@@ -52,9 +52,9 @@
             this.btn_AddDevice,
             this.btn_DelDevice,
             this.btn_RefreshTress});
-            this.toolStrip1.Location = new System.Drawing.Point(8, 662);
+            this.toolStrip1.Location = new System.Drawing.Point(1, 661);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1113, 42);
+            this.toolStrip1.Size = new System.Drawing.Size(1127, 50);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -64,7 +64,7 @@
             this.btn_AddDevice.Image = ((System.Drawing.Image)(resources.GetObject("btn_AddDevice.Image")));
             this.btn_AddDevice.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_AddDevice.Name = "btn_AddDevice";
-            this.btn_AddDevice.Size = new System.Drawing.Size(46, 36);
+            this.btn_AddDevice.Size = new System.Drawing.Size(46, 44);
             this.btn_AddDevice.Text = "添加设备";
             // 
             // btn_DelDevice
@@ -88,9 +88,10 @@
             // treeView_Device
             // 
             this.treeView_Device.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView_Device.Location = new System.Drawing.Point(8, 8);
+            this.treeView_Device.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.treeView_Device.Location = new System.Drawing.Point(1, 1);
             this.treeView_Device.Name = "treeView_Device";
-            this.treeView_Device.Size = new System.Drawing.Size(1113, 654);
+            this.treeView_Device.Size = new System.Drawing.Size(1127, 660);
             this.treeView_Device.TabIndex = 1;
             // 
             // contextMenuStrip_Device
@@ -107,25 +108,25 @@
             // tsmi_AddChild
             // 
             this.tsmi_AddChild.Name = "tsmi_AddChild";
-            this.tsmi_AddChild.Size = new System.Drawing.Size(300, 38);
+            this.tsmi_AddChild.Size = new System.Drawing.Size(184, 38);
             this.tsmi_AddChild.Text = "添加设备";
             // 
             // tsmi_Delete
             // 
             this.tsmi_Delete.Name = "tsmi_Delete";
-            this.tsmi_Delete.Size = new System.Drawing.Size(300, 38);
+            this.tsmi_Delete.Size = new System.Drawing.Size(184, 38);
             this.tsmi_Delete.Text = "移除设备";
             // 
             // tsmi_Copy
             // 
             this.tsmi_Copy.Name = "tsmi_Copy";
-            this.tsmi_Copy.Size = new System.Drawing.Size(300, 38);
+            this.tsmi_Copy.Size = new System.Drawing.Size(184, 38);
             this.tsmi_Copy.Text = "复制设备";
             // 
             // tsmi_EnableDisable
             // 
             this.tsmi_EnableDisable.Name = "tsmi_EnableDisable";
-            this.tsmi_EnableDisable.Size = new System.Drawing.Size(300, 38);
+            this.tsmi_EnableDisable.Size = new System.Drawing.Size(184, 38);
             this.tsmi_EnableDisable.Text = "禁用设备";
             // 
             // DeviceTreeUC

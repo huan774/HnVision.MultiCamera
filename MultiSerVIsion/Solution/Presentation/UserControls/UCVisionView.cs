@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MvCameraControl;
+
 
 namespace MultiSerVIsion.Solution.Presentation.UserControls
 {
@@ -26,7 +26,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         public UCVisionView()
         {
             InitializeComponent();
-            nudExposure.ValueChanged += (s, e) => ExposureValueChanged?.Invoke(this, EventArgs.Empty);
+           /* nudExposure.ValueChanged += (s, e) => ExposureValueChanged?.Invoke(this, EventArgs.Empty);
             nudGain.ValueChanged += (s, e) => GainValueChanged?.Invoke(this, EventArgs.Empty);
             cbxTriggerMode.SelectedIndexChanged += (s, e) => TriggerModeChanged?.Invoke(this, EventArgs.Empty);
             trackLight.ValueChanged += (s, e) => LightSliderChanged?.Invoke(this, EventArgs.Empty);
@@ -35,59 +35,64 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             btnContinuousGrab.Click += (s, e) => BtnContinuousGrabClick?.Invoke(this, EventArgs.Empty);
             btnStopGrab.Click += (s, e) => BtnStopGrabClick?.Invoke(this, EventArgs.Empty);
             btnSaveImage.Click += (s, e) => BtnSaveImageClick?.Invoke(this, EventArgs.Empty);
-            btnClearImg.Click += (s, e) => BtnClearImgClick?.Invoke(this, EventArgs.Empty);
+            btnClearImg.Click += (s, e) => BtnClearImgClick?.Invoke(this, EventArgs.Empty);*/
         }
         public override void OnViewShow()
         {
             base.OnViewShow();
-            lblImgStatus.Text = "未连接相机";
+           /* lblImgStatus.Text = "未连接相机";*/
 
         }
         public override void SetUIPlaceholder()
         {
-            nudExposure.Value = 1000; ;
+           /* nudExposure.Value = 1000; ;
             nudExposure.Value = 1;
             trackLight.Value = 50;
             cbxTriggerMode.SelectedIndex = 0;
             picVisionImg.Image = null;
-            lblImgStatus.Text = "无图像";
+            lblImgStatus.Text = "无图像";*/
 
         }
         public Bitmap ShowImage
         {
             set
             {
-                picVisionImg.Image?.Dispose();
-                picVisionImg.Image = value;
+               /* picVisionImg.Image?.Dispose();
+                picVisionImg.Image = value;*/
             }
         }
-        public string ImageStatusText
+/*        public string ImageStatusText
         {
             set => lblImgStatus.Text = value;
+        }*/
+
+        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
 
-        public decimal Exposure
-        {
-            get => nudExposure.Value;
-            set => nudExposure.Value = value;
-        }
+        /* public decimal Exposure
+         {
+             get => nudExposure.Value;
+             set => nudExposure.Value = value;
+         }
 
-        public decimal Gain
-        {
-            get => nudGain.Value;
-            set => nudGain.Value = value;
-        }
+         public decimal Gain
+         {
+             get => nudGain.Value;
+             set => nudGain.Value = value;
+         }
 
-        public int LightValue
-        {
-            get => trackLight.Value;
-            set => trackLight.Value = value;
-        }
+         public int LightValue
+         {
+             get => trackLight.Value;
+             set => trackLight.Value = value;
+         }
 
-        public string TriggerMode
-        {
-            get => cbxTriggerMode.Text;
-            set => cbxTriggerMode.Text = value;
-        }
+         public string TriggerMode
+         {
+             get => cbxTriggerMode.Text;
+             set => cbxTriggerMode.Text = value;
+         }*/
     }
 }

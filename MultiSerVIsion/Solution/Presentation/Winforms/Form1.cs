@@ -1,5 +1,4 @@
 ﻿using MultiSerVIsion.Solution.Application;
-using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Domain.Services;
 using MultiSerVIsion.Solution.Infrastructure.Repository;
@@ -54,7 +53,8 @@ namespace MultiSerVIsion
         {
             IDeviceRepository repo = new DeviceRepository();
             IDeviceDomainSerivce domainSve = new DeviceDomainService();
-            IDeviceAppService appSvc = new DeviceAppService(repo, domainSve);
+            IDeviceManager manager = new DeviceManager(repo);
+            IDeviceAppService appSvc = new DeviceAppService(domainSve,manager);
 
             IDeviceTreeView treeView = new DeviceTreeUC();
             IDeviceDatailView detailView = new CameraDateilUC();
@@ -62,8 +62,10 @@ namespace MultiSerVIsion
 
             var treePresenter = new DeviceTressPresenter(treeView, appSvc);
             var detailPresenter = new DeviceDetailPresenter(appSvc);
-
-            split_outer.Panel1.Controls.Add(treeView as DeviceTreeUC);
+/*
+            split_outer.Panel1.Controls.Add(treeView as DeviceTreeUC);*/
+           split_Devicetree.Panel1.Controls.Add(treeView as DeviceTreeUC);
+            split_Devicetree.Panel2.Controls.Add(new DeviceInfoUC());
 
             detailPresenter.OnCreaateDetailUc += (System.Windows.Forms.UserControl uc) =>
             {
@@ -155,6 +157,17 @@ namespace MultiSerVIsion
                 _lastActiveView.Visible = false;
             }
 
+            if (currView is UCMonitorView)
+            {
+                
+                splitContainer2.SplitterDistance = 685;
+            }
+            else
+            {
+                
+                splitContainer2.SplitterDistance = 789;
+            }
+
             currView.Visible = true;
             currView.OnViewHide();
 
@@ -196,15 +209,16 @@ namespace MultiSerVIsion
             {
                 uc.Dispose();
             }
-            /*_treeUC.Dispose();
-            _viewCache.Clear();
-            _detailUC?.Dispose();*/
+            
         }
         private void Vision_ExposureChanged(object sender, EventArgs e)
         {
             var vision = sender as UCVisionView;
         }
 
-        
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

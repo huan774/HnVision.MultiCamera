@@ -17,7 +17,7 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
 {
     public class DeviceDetailPresenter
     {
-
+        
         private IDeviceDatailView _datailView;
         private readonly IDeviceAppService _appService;
         private string _currentEditDevId = string.Empty;
@@ -37,6 +37,7 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
              if (!res.Success|| res.Data == null)
              {
                  _datailView.ShowMessage("设备加载失败:"+res.Message);
+              
                  ClearEdit();
                  return ;
              }
@@ -64,7 +65,6 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
         private void BindViewEvent(IDeviceDatailView view)
         {
             view.SaveConfigRequest += OnSaveConfig;
-          
         }
         private void UnBindViewEvent()
         {
@@ -98,9 +98,9 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
                 DeviceType = editData.DeviceType,
                 IsEnable = editData.IsEnable,
 
-                PlcConfig = editData.PlcConfig,
-                CameraConfig = editData.CameraConfig,
-                MotionCardConfig=editData.MotionConfig
+                
+               /* CameraConfig = editData.CameraConfig,
+                MotionCardConfig=editData.MotionConfig*/
             };
 
             editData.DeviceId = _currentEditDevId;
@@ -127,7 +127,7 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
         }
         private string GetGroupTypeKey(string groupTag)
         {
-            if (groupTag.Contains("PLC")) return "PLC";
+            /*if (groupTag.Contains("PLC")) return "PLC";*/
             if (groupTag.Contains("Camera")) return "Camera";
             if (groupTag.Contains("Card")) return "Card";
             return "Default";

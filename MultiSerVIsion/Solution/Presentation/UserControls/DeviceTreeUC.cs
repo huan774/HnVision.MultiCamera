@@ -272,7 +272,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             treeView_Device.Nodes.Clear();
             treeView_Device.Nodes.Add("相机分组").Tag = "Group_Camera";
             treeView_Device.Nodes.Add("运动轴分组").Tag = "Group_Motion";
-            treeView_Device.Nodes.Add("PLC分组").Tag = "Group_PLCser";
+           /* treeView_Device.Nodes.Add("PLC分组").Tag = "Group_PLCser";*/
             
         }
         public void ClearSelectNode()

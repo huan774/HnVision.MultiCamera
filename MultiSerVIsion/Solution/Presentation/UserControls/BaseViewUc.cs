@@ -28,10 +28,11 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         public BaseViewUc()
         {
             InitializeComponent();
-            this.Padding=new Padding(GlobalPadding);
+            this.Padding=new Padding(1);
             this.SetStyle(ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint|
                 ControlStyles.OptimizedDoubleBuffer,true); 
+            
         }
 
         public virtual void OnViewShow()

@@ -44,7 +44,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System">
-      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.dll</HintPath>
     </Reference>
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
@@ -87,30 +87,36 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Solution\Application\DeviceAppService.cs" />
-    <Compile Include="Solution\Application\Dtos\CameraUiDto.cs" />
+    <Compile Include="Solution\Application\Dtos\CameraDeviceDisplayDto.cs" />
+    <Compile Include="Solution\Application\Dtos\CameraRuntimeStateDto.cs" />
     <Compile Include="Solution\Application\Dtos\DeviceCreateInput.cs" />
     <Compile Include="Solution\Application\Dtos\DeviceUpdateIput.cs" />
+    <Compile Include="Solution\Application\Dtos\ImageCaptureResult.cs" />
     <Compile Include="Solution\Application\IDeviceAppService.cs" />
     <Compile Include="Solution\Application\Services\CameraApplicationoService.cs" />
+    <Compile Include="Solution\Application\Services\ICameraAppService.cs" />
     <Compile Include="Solution\Domain\Entities\CameraEntity.cs" />
     <Compile Include="Solution\Domain\Entities\Configs\CameraConnectConfig.cs" />
     <Compile Include="Solution\Domain\Entities\Configs\MotionCardConnectConfig.cs" />
-    <Compile Include="Solution\Domain\Entities\Configs\PlcconnectConfig.cs" />
     <Compile Include="Solution\Domain\Entities\DeviceEntity.cs" />
+    <Compile Include="Solution\Domain\Entities\MotionDeviceEntity.cs" />
     <Compile Include="Solution\Domain\Enums\CameraStatus.cs" />
     <Compile Include="Solution\Domain\Enums\DeviceCategory.cs" />
-    <Compile Include="Solution\Domain\Models\CameraDeviceDto.cs" />
-    <Compile Include="Solution\Domain\Repositories\ICameraDeviceManager.cs" />
+    <Compile Include="Solution\Domain\Enums\DeviceConnectionStatue.cs" />
+    <Compile Include="Solution\Domain\Factory\DeviceFactory.cs" />
     <Compile Include="Solution\Domain\Repositories\ICameraHardwareDriver.cs" />
+    <Compile Include="Solution\Domain\Repositories\IDeviceManager.cs" />
     <Compile Include="Solution\Domain\Repositories\IDeviceRepository.cs" />
     <Compile Include="Solution\Domain\Services\CameraDomainService.cs" />
     <Compile Include="Solution\Domain\Services\DeviceDomainService.cs" />
     <Compile Include="Solution\Domain\Services\ICameraDeviceService.cs" />
     <Compile Include="Solution\Domain\Services\IDeviceDomainSerivce.cs" />
+    <Compile Include="Solution\Infrastructure\HiKHardware\CameraHardwareRawDto.cs" />
     <Compile Include="Solution\Infrastructure\HiKHardware\HikCameraHardwareDriver.cs" />
-    <Compile Include="Solution\Infrastructure\Repository\CameraDeviceManager.cs" />
+    <Compile Include="Solution\Infrastructure\Repository\DeviceManager.cs" />
     <Compile Include="Solution\Infrastructure\Repository\DeviceRepository.cs" />
     <Compile Include="Solution\Presentation\Presenter\DeviceDetailPresenter.cs" />
+    <Compile Include="Solution\Presentation\Presenter\DeviceInfoPresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\DeviceTressPresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\Factory\DeviceDetailView.cs" />
     <Compile Include="Solution\Presentation\UserControls\BaseViewUc.cs">
@@ -125,23 +131,17 @@
     <Compile Include="Solution\Presentation\UserControls\CameraDateilUC.Designer.cs">
       <DependentUpon>CameraDateilUC.cs</DependentUpon>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\CardDetailUC.cs">
+    <Compile Include="Solution\Presentation\UserControls\DeviceInfoUC.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\CardDetailUC.Designer.cs">
-      <DependentUpon>CardDetailUC.cs</DependentUpon>
+    <Compile Include="Solution\Presentation\UserControls\DeviceInfoUC.Designer.cs">
+      <DependentUpon>DeviceInfoUC.cs</DependentUpon>
     </Compile>
     <Compile Include="Solution\Presentation\UserControls\DeviceTreeUC.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Solution\Presentation\UserControls\DeviceTreeUC.Designer.cs">
       <DependentUpon>DeviceTreeUC.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Solution\Presentation\UserControls\PlcDetailUC.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Solution\Presentation\UserControls\PlcDetailUC.Designer.cs">
-      <DependentUpon>PlcDetailUC.cs</DependentUpon>
     </Compile>
     <Compile Include="Solution\Presentation\UserControls\UCMonitorView.cs">
       <SubType>UserControl</SubType>
@@ -156,6 +156,7 @@
       <DependentUpon>UCVisionView.cs</DependentUpon>
     </Compile>
     <Compile Include="Solution\Presentation\Views\IDeviceDatailView.cs" />
+    <Compile Include="Solution\Presentation\Views\IDeviceInfoParamView.cs" />
     <Compile Include="Solution\Presentation\Views\IDeviceTreeView.cs" />
     <Compile Include="Solution\Presentation\Winforms\Form1.cs">
       <SubType>Form</SubType>
@@ -191,14 +192,11 @@
     <EmbeddedResource Include="Solution\Presentation\UserControls\CameraDateilUC.resx">
       <DependentUpon>CameraDateilUC.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Solution\Presentation\UserControls\CardDetailUC.resx">
-      <DependentUpon>CardDetailUC.cs</DependentUpon>
+    <EmbeddedResource Include="Solution\Presentation\UserControls\DeviceInfoUC.resx">
+      <DependentUpon>DeviceInfoUC.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Solution\Presentation\UserControls\DeviceTreeUC.resx">
       <DependentUpon>DeviceTreeUC.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Solution\Presentation\UserControls\PlcDetailUC.resx">
-      <DependentUpon>PlcDetailUC.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Solution\Presentation\UserControls\UCMonitorView.resx">
       <DependentUpon>UCMonitorView.cs</DependentUpon>
@@ -226,7 +224,9 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Solution\Domain\Models\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -1,6 +1,6 @@
 ﻿using MultiSerVIsion.Solution.Application.Dtos;
 using MultiSerVIsion.Solution.Domain.Entities;
-using MultiSerVIsion.Solution.Domain.Models;
+
 /*using MultiSerVIsion.Solution.Presentation.Winforms;*/
 using MultiSerVIsion.Solution.Shared.Models;
 using System;

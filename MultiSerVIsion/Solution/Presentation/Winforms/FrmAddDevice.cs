@@ -19,7 +19,7 @@ namespace MultiSerVIsion.Solution.Presentation.Winforms
         public FrmAddDevice()
         {
             InitializeComponent();
-            cbxDevType.Items.AddRange(new object[] { "相机设备", "PLC设备", "运动控制" });
+            cbxDevType.Items.AddRange(new object[] { "相机设备",/* "PLC设备",*/ "运动控制" });
             cbxDevType.SelectedIndex = 0;
         }
 
@@ -52,9 +52,9 @@ namespace MultiSerVIsion.Solution.Presentation.Winforms
                 case "相机设备":
                     typeKey = "Camera";
                     break;
-                case "PLC设备":
+               /* case "PLC设备":
                     typeKey = "Plc";
-                    break;
+                    break;*/
                 case "运动控制":
                     typeKey = "Motion";
                     break;
@@ -70,20 +70,4 @@ namespace MultiSerVIsion.Solution.Presentation.Winforms
                
         }
     }
- 
-  /*  public class DeviceCreateInput
-    {
-        *//* public string GroupId { get; set; }
-         public string DeviceName { get; set; }
-         public string IpAddress { get; set; }
-         public string DeviceType { get; set; }*//*
-
-        public string DeviceName { get; set; } = string.Empty;
-        public string DeviceType { get; set; } = string.Empty;
-        public string GroupId { get; set; } = string.Empty;
-        public string IpAddress { get; set; } = string.Empty;
-        public bool IsEnable { get; set; }
-
-    }*/
-
 }

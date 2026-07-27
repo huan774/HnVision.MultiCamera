@@ -15,12 +15,12 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter.Factory
             if(string.IsNullOrEmpty(groupTag))
                 return new CameraDateilUC();
 
-            if (groupTag.Contains("PLC"))
-                return new PlcDetailUC();
+            /*if (groupTag.Contains("PLC"))
+                return new PlcDetailUC();*/
             if (groupTag.Contains("Camera"))
                 return new CameraDateilUC();
-            if (groupTag.Contains("Motion"))
-                return new CardDetailUC();
+            /*if (groupTag.Contains("Motion"))
+                return new CardDetailUC();*/
 
             return new CameraDateilUC();
 

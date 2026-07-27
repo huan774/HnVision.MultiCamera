@@ -1,6 +1,6 @@
 ﻿using MultiSerVIsion.Solution.Application.Dtos;
 using MultiSerVIsion.Solution.Domain.Entities;
-/*using MultiSerVIsion.Solution.Domain.Models;*/
+using MultiSerVIsion.Solution.Domain.Factory;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Domain.Services;
 using MultiSerVIsion.Solution.Shared.Exceptions;
@@ -11,32 +11,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace MultiSerVIsion.Solution.Application
 {
     public class DeviceAppService: IDeviceAppService
     {
-        private readonly IDeviceRepository _repo;
+       /* private readonly IDeviceRepository _repo;*/
         private readonly IDeviceDomainSerivce _domainService;
+        private readonly IDeviceManager _manager;
 
-        public DeviceAppService(IDeviceRepository repo, IDeviceDomainSerivce domainService)
+        public DeviceAppService(/*IDeviceRepository repo,*/ IDeviceDomainSerivce domainService,IDeviceManager deviceManager)
         {
-            _repo = repo;
+           /* _repo = repo;*/
             _domainService = domainService;
+            _manager = deviceManager;
         }
         public OperationResult<DeviceEntity> CopyDevice(string soureDeviceId)
         {
             try
             {
-                var source = _repo.GetById(soureDeviceId);
+                var source = _manager.GetDeviceById(soureDeviceId);
                 var copyCheck = _domainService.CanCopyDevice(source);
                 if (!copyCheck.IsValid)
                     return OperationResult<DeviceEntity>.Fail(copyCheck.Message);
 
                 var newDevice = _domainService.CloneDevice(source);
-                _repo.Add(newDevice);
+                _manager.AddDevice(newDevice);
 
-                string groupTag = _repo.GetGroupTag(soureDeviceId);
+                string groupTag = _manager.GetGroupTag(soureDeviceId);
                 return OperationResult<DeviceEntity>.Succes(newDevice, groupTag);
             }
             catch (DeviceNotFoundException ex)
@@ -65,20 +68,21 @@ namespace MultiSerVIsion.Solution.Application
         {
             try
             {
-                var entity = new DeviceEntity
-                {
-                    DeviceId = Guid.NewGuid().ToString("N"),
-                    GroupTage = input.GroupTag,
-                    DeviceName = input.DeviceName,
-                    IpAddress = input.IpAddress,
-                    DeviceType = input.DeviceType,
-                    IsEnable = input.IsEnable,
-                };
+                var entity = DeviceFactory.CreateDevice(input.DeviceType);
+
+                entity.DeviceId=Guid.NewGuid().ToString("N");
+                entity.DeviceName=input.DeviceName;
+                entity.DeviceType=input.DeviceType;
+                entity.IpAddress=input.IpAddress;
+                entity.GroupTage = input.GroupTag;
+                entity.IsEnable=input.IsEnable;
+
                 var validate = _domainService.ValidateDeviceEntity(entity);
+
                 if (!validate.IsValid)
                     return OperationResult<DeviceEntity>.Fail(validate.Message);
-
-                _repo.Add(entity);
+                _manager.AddDevice(entity);
+               /* _repo.Add(entity);*/
                 return OperationResult<DeviceEntity>.Succes(entity, entity.GroupTage);
             
             }catch(DeviceDuplicateIdException ex)
@@ -102,7 +106,7 @@ namespace MultiSerVIsion.Solution.Application
         {
             try
             {
-                bool success = _repo.Remove(devId);
+                bool success = _manager.RemoveDevice(devId);
                 return OperationResult<bool>.Succes(success);
 
             }catch (DeviceDuplicateIdException ex)
@@ -125,12 +129,12 @@ namespace MultiSerVIsion.Solution.Application
         {
             try
             {
-                var dveice = _repo.GetById(devId);
+                var dveice = _manager.GetDeviceById(devId);
                 var check = _domainService.CheckToggleEnable(dveice);
                 if (!check.IsValid)
                     return OperationResult<bool>.Fail(check.Message);
 
-                _repo.Update(dveice);
+                _manager.Update(dveice);
                 return OperationResult<bool>.Succes(true);
 
             }catch (DeviceNotFoundException ex)
@@ -153,33 +157,34 @@ namespace MultiSerVIsion.Solution.Application
         { 
            try
            {
-                var list = _repo.GetByGroup(groupTag);
+                var list = _manager.GetDevicesByGroup(groupTag);
                 return OperationResult<List<DeviceEntity>>.Succes(list);
-            }
+           }
             catch (StorageIoException ex)
-            {
+           {
                 LogHelper.Error("分组查询存储异常", ex);
                 return OperationResult<List<DeviceEntity>>.Fail($"本地存储异常：{ex.Message}");
-            }
+           }
         }
         public OperationResult<List<DeviceEntity>> GetAllDevices()
         {
-            try
-            {
-                var list = _repo.GetAll();
-                return OperationResult<List<DeviceEntity>>.Succes(list);
-            }
-            catch(StorageIoException ex)
-            {
-                LogHelper.Error("全局查询储存异常",ex);
-                return OperationResult<List<DeviceEntity>>.Fail($"本地存储异常：{ex.Message}");
-            }
+             try
+             {
+                 var list = _manager.GetAllDevices();
+                 return OperationResult<List<DeviceEntity>>.Succes(list);
+             }
+             catch(StorageIoException ex)
+             {
+                 LogHelper.Error("全局查询储存异常",ex);
+                 return OperationResult<List<DeviceEntity>>.Fail($"本地存储异常：{ex.Message}");
+             }
+            
         }
         public OperationResult<DeviceEntity> UpdataDevice(DeviceUpdateIput input)
         {
             try
             {
-                var target = _repo.GetById(input.DeviceId);
+                var target = _manager.GetDeviceById(input.DeviceId);
                 if (target == null)
                     return OperationResult< DeviceEntity>.Fail($"设备{input.DeviceName}不存在");
 
@@ -189,11 +194,11 @@ namespace MultiSerVIsion.Solution.Application
                 target.DeviceType = input.DeviceType;
                 target.IsEnable=input.IsEnable;
 
-                target.PlcConfig = input.PlcConfig;
-                target.MotionConfig = input.MotionCardConfig;
-                target.CameraConfig = input.CameraConfig;
+                
+                /*target.MotionConfig = input.MotionCardConfig;
+                target.CameraConfig = input.CameraConfig;*/
 
-                _repo.Update(target);
+                _manager.Update(target);
                 return OperationResult<DeviceEntity>.Succes(target, target.GroupTage);
             }
             catch (DeviceNotFoundException ex)
@@ -216,7 +221,7 @@ namespace MultiSerVIsion.Solution.Application
         {
             try
             {
-                var data = _repo.GetById(devId);
+                var data = _manager.GetDeviceById(devId);
                 return OperationResult<DeviceEntity>.Succes(data);
 
             }

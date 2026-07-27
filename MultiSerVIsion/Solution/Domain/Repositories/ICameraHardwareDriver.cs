@@ -1,5 +1,5 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
-using MultiSerVIsion.Solution.Domain.Models;
+using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +10,12 @@ namespace MultiSerVIsion.Solution.Domain.Repositories
 {
     public interface ICameraHardwareDriver
     {
-        List<CameraDeviceDto> SerchAllCameraDevice();
+        Task<List<CameraHardwareRawDto>> ScanAllCameraAsync();
+      
         int Login(CameraConnectConfig connectParam);
         void OpenStream(int sdkHandle);
         void CloseStream(int sdkHandle);
         void Logout(int sdkHandle);
+        void Relese();
     }
 }

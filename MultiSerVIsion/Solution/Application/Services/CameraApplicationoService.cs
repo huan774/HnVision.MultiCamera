@@ -1,8 +1,9 @@
 ﻿using MultiSerVIsion.Solution.Application.Dtos;
 using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
-using MultiSerVIsion.Solution.Domain.Models;
+using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Domain.Services;
+using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -12,27 +13,34 @@ using System.Threading.Tasks;
 
 namespace MultiSerVIsion.Solution.Application.Services
 {
-    public class CameraApplicationoService
+    public class CameraApplicationoService/*:ICameraAppService*/
     {
         private readonly ICameraDeviceService _cameraDeviceService;
-        public CameraApplicationoService(ICameraDeviceService cameraDeviceService)
+        private readonly IDeviceManager _cameraDeviceManager;
+        public CameraApplicationoService(ICameraDeviceService cameraDeviceService, IDeviceManager cameraDeviceManager)
         {
             _cameraDeviceService = cameraDeviceService;
+            _cameraDeviceManager = cameraDeviceManager;
         }
-        public List<CameraUiDto> SearchCameraForUi()
+        public async Task <List<CameraHardwareRawDto>> SearchCameraForUi()
         {
-            List<CameraDeviceDto> domainList = _cameraDeviceService.SearchCameraDevices();
-            return domainList.Select(d=>new CameraUiDto
+            List<CameraHardwareRawDto> domainList =await _cameraDeviceService.ScanAllCamerasAsync();
+            return domainList.Select(d=>new CameraHardwareRawDto
             {
-                Ip=d.IpAddress,
-                Serial=d.SerialNumber,
-                Model=d.ModelName
+                IpAddress=d.IpAddress,
+                SerialNumber=d.SerialNumber,
+                ModelName=d.ModelName,
+                InterfaceType=d.InterfaceType,
+                
             }).ToList();
+           
         }
-        public OperationResult Selectcamera(CameraUiDto cameraUiDto, CameraConnectConfig LoginParam)
+        /*public OperationResult Selectcamera(CameraUiDto cameraUiDto, CameraConnectConfig LoginParam)
         {
             CameraDeviceDto domainDevice = new CameraDeviceDto(
-                cameraUiDto.Ip, cameraUiDto.Serial, cameraUiDto.Model);
+                cameraUiDto.SerialNumber,cameraUiDto.ModelName,cameraUiDto.IpAddress,cameraUiDto.IntrefaceType
+                
+                );
             return _cameraDeviceService.SelectCameraDevice(domainDevice, LoginParam);
             
         }
@@ -58,6 +66,6 @@ namespace MultiSerVIsion.Solution.Application.Services
         {
             return _cameraDeviceService.GetCurrentCameraStatus();
         }
-
+*/
     }
 }

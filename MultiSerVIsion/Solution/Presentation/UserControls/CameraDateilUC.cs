@@ -45,13 +45,12 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 lbl_deviceType.Text = device.DeviceType;
                 lbl_deviceStuate.Text = "未连接";
 
-                var cfg = device.CameraConfig ?? new CameraConnectConfig();
-                num_CamPort.Value = cfg.Port;
-                num_CamExposureUs.Value = cfg.DefaultExposureUs;
-                nud_CamChannel.Value = cfg.TriggerChannel;
-                num_CamGiain.Value = cfg.DefaultGain;
-                cbx_CamTrigger.Text = cfg.TriggerDefaultMode;
-                cbx_CamType.Text = cfg.CameraType;
+                
+                var cfg = new CameraParamConfig();
+              /*  num_CamExposureUs.Value = (int)cfg.ExposureTime;*/
+                num_CamGiain.Value = (int)cfg.Gain;
+                cbx_CamTrigger.Text = cfg.TriggerSource;
+               
             }
             finally
             {
@@ -93,27 +92,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         }
         public DeviceEntity GetEditInput()
         {
-            return new DeviceEntity
-            {
-                DeviceName=lbl_DeviceName.Text,
-                DeviceId = lbl_deviceID.Text,
-                IpAddress = lbl_deviceID.Text,
-                DeviceType = lbl_deviceType.Text,
-                /*IsEnable = chkIsEnable.Checked,*/
-
-                CameraConfig = new CameraConnectConfig
-                {
-                    Port = (int)num_CamPort.Value,
-                    DefaultExposureUs = (int)num_CamExposureUs.Value,
-                    DefaultGain = (int)num_CamGiain.Value,
-                    TriggerDefaultMode = cbx_CamTrigger.Text,
-                    TriggerChannel = (int)nud_CamChannel.Value,
-                    AutoExposureDefault = chk_AutoExposureDefault.Checked,
-
-                },
-                PlcConfig = null,
-                MotionConfig = null,
-            };
+            return new CameraEntity();
             
         }
         public void ShowMessage(string message) { MessageBox.Show(this,message); }
