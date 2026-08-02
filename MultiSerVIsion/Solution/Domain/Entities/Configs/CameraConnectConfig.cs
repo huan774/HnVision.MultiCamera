@@ -14,6 +14,7 @@ namespace MultiSerVIsion.Solution.Domain.Entities.Configs
         public string IpAddress { get; set; }      // 目标IP
         public int Port { get; set; }              // 通讯端口
         public string InterfaceType { get; set; }  // 接口类型
+        public string Model {  get; set; }
         public int ConnectTimeoutMs { get; set; }  // 连接超时
                                                    // 部分品牌相机需要用户名密码
         public string UserName { get; set; }

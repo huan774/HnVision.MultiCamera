@@ -46,10 +46,10 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 lbl_deviceStuate.Text = "未连接";
 
                 
-                var cfg = new CameraParamConfig();
-              /*  num_CamExposureUs.Value = (int)cfg.ExposureTime;*/
+               /* var cfg = new CameraParamConfig();
+             *//*  num_CamExposureUs.Value = (int)cfg.ExposureTime;*//*
                 num_CamGiain.Value = (int)cfg.Gain;
-                cbx_CamTrigger.Text = cfg.TriggerSource;
+                cbx_CamTrigger.Text = cfg.TriggerSource;*/
                
             }
             finally
@@ -62,7 +62,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             this.SuspendLayout();
             try
             {
-                lbl_deviceID.Text = "未加载设备";
+               /* lbl_deviceID.Text = "未加载设备";
                 lbl_DeviceName.Text = string.Empty;
                 lbl_deviceType.Text = string.Empty;
                 lbl_deviceStuate.Text = string.Empty;
@@ -73,7 +73,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 cbx_CamTrigger.SelectedIndex = 0;
                 cbx_CamType.SelectedIndex = 1;
                 nud_CamChannel.Value = 1;
-                chk_AutoExposureDefault.Checked = false;
+                chk_AutoExposureDefault.Checked = false;*/
 
             }
             finally
@@ -102,6 +102,5 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         {
             ClearRequest?.Invoke();
         }
-       
     }
 }

@@ -8,11 +8,16 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
 {
     public class CameraHardwareRawDto
     {
-        public string SerialNumber { get; set; }  // 硬件唯一序列号
-        public string IpAddress { get; set; }     // 硬件当前IP
-        public string ModelName { get; set; }     // 硬件型号
-        public string InterfaceType { get; set; } // GigE/USB/CameraLink
-                                                  // SDK原生设备信息结构体，仅连接时用，不持久化
-        public object RawDeviceInfo { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
+        /// <summary>序列号</summary>
+        public string SerialNumber { get; set; } = string.Empty;
+        /// <summary>设备型号</summary>
+        public string Model { get; set; } = string.Empty;
+        /// <summary>接口类型 GigE/USB</summary>
+        public string InterfaceType { get; set; } = string.Empty;
+        /// <summary>MAC地址（SDK原始信息）</summary>
+        public string MacAddress { get; set; } = string.Empty;
+        /// <summary>SDK内部设备唯一标识（底层专用，上层丢弃）</summary>
+        public string SdkDeviceKey { get; set; } = string.Empty;
     }
 }

@@ -87,13 +87,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Solution\Application\DeviceAppService.cs" />
-    <Compile Include="Solution\Application\Dtos\CameraDeviceDisplayDto.cs" />
-    <Compile Include="Solution\Application\Dtos\CameraRuntimeStateDto.cs" />
+    <Compile Include="Solution\Domain\Models\CameraDeviceDto.cs" />
+    <Compile Include="Solution\Presentation\Dtos\CameraDisplayDto.cs" />
+    <Compile Include="Solution\Domain\Models\CameraRuntimeStateDto.cs" />
     <Compile Include="Solution\Application\Dtos\DeviceCreateInput.cs" />
     <Compile Include="Solution\Application\Dtos\DeviceUpdateIput.cs" />
-    <Compile Include="Solution\Application\Dtos\ImageCaptureResult.cs" />
+    <Compile Include="Solution\Domain\Models\ImageCaptureResult.cs" />
     <Compile Include="Solution\Application\IDeviceAppService.cs" />
-    <Compile Include="Solution\Application\Services\CameraApplicationoService.cs" />
+    <Compile Include="Solution\Application\Services\CameraAppService.cs" />
     <Compile Include="Solution\Application\Services\ICameraAppService.cs" />
     <Compile Include="Solution\Domain\Entities\CameraEntity.cs" />
     <Compile Include="Solution\Domain\Entities\Configs\CameraConnectConfig.cs" />
@@ -174,6 +175,7 @@
     </Compile>
     <Compile Include="Solution\Shared\CamerKernel\CameraException.cs" />
     <Compile Include="Solution\Shared\Exceptions\DeviceNotFoundException.cs" />
+    <Compile Include="Solution\Domain\Extensions\CameraMappingExtensions.cs" />
     <Compile Include="Solution\Shared\GlobalConst.cs" />
     <Compile Include="Solution\Shared\Helpers\FileloHelper.cs" />
     <Compile Include="Solution\Shared\Helpers\JsonConfigHelper.cs" />
@@ -224,9 +226,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Solution\Domain\Models\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

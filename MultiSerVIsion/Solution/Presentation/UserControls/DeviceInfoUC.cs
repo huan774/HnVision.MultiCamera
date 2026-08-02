@@ -1,7 +1,7 @@
 ﻿using MultiSerVIsion.Solution.Application.Dtos;
 using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Enums;
-using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
+using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Presentation.Views;
 using MvCameraControl;
 using System;
@@ -24,23 +24,32 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         {
             InitializeComponent();
             this.Dock= DockStyle.Fill;
+
             btn_Connect.Click += (s, e) => OnConnectClicked?.Invoke();
             btn_Disconnect.Click += (s, e) => OnDisconnectClicked?.Invoke();
                 
         }
 
-
-        public void ShowDeviceBasicInfo(DeviceEntity device,CameraHardwareRawDto info)
+        public void ShowOnlineCameraInfo(CameraDeviceDto dto)
         {
-            lbl_DeviceType.Text = device.DeviceType;
-            lbl_DeviceName.Text = device.DeviceName;
-
-            lbl_Serial.Text = info.SerialNumber;
-            lbl_ip.Text = info.IpAddress;
-            lbl_Interface.Text = info.InterfaceType;
-            lbl_HardwareModel.Text = info.ModelName;
-
+            lbl_DeviceType.Text = "相机（在线未添加）";
+           /* lbl_DeviceName.Text = dto.;*/
+            lbl_Serial.Text = dto.SerialNumber;
+            lbl_Interface.Text = dto.InterfaceType.ToString();
+            lbl_ip.Text = dto.IpAddress;
+            lbl_HardwareModel.Text = dto.Model;
         }
+
+        public void ShowConfigCameraInfo(CameraEntity entity)
+        {
+            lbl_DeviceType.Text = entity.DeviceType;
+            lbl_DeviceName.Text = entity.DeviceName;
+            lbl_HardwareModel.Text = entity.CameraAllConfig.ConnectConfig.Model;
+            lbl_Serial.Text = entity.CameraAllConfig.ConnectConfig.SerialNumber;
+            lbl_ip.Text = entity.CameraAllConfig.ConnectConfig.IpAddress;
+            lbl_HardwareModel.Text = entity.CameraAllConfig.ConnectConfig.InterfaceType;
+        }
+
         public void ClearDeviceInfo()
         {
             lbl_DeviceType.Text = string.Empty;
@@ -56,30 +65,26 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             switch (status)
             {
                 case CameraStatus.Disconnected:
-                    lbl_DeviceLight.BackColor = Color.Red;
+                   /* lbl_DeviceLight.BackColor = Color.Red;*/
                     btn_Connect.Visible = true;
                     btn_Disconnect.Visible = false;
                     break;
                 case CameraStatus.Connected:
                 case CameraStatus.Streaming:
-                    lbl_DeviceLight.BackColor = Color.Green;
+               /*     lbl_DeviceLight.BackColor = Color.Green;*/
                     btn_Connect.Visible = false;
                     btn_Disconnect.Visible = true;
                     break;
                 default:
-                    lbl_DeviceLight.BackColor = Color.Yellow;
+                   /* lbl_DeviceLight.BackColor = Color.Yellow;*/
                     break; 
             }
-
         }
         public void ShowMessage(string message)
         {
             MessageBox.Show(message);
         }
 
-        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
+        
     }
 }

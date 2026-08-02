@@ -39,6 +39,6 @@ namespace MultiSerVIsion.Solution.Domain.Repositories
 
         /// <summary>将内存中所有设备持久化到磁盘</summary>
         void SaveToStorage();
-        void Update(DeviceEntity device);
+        /*void Update(DeviceEntity device);*/
     }
 }

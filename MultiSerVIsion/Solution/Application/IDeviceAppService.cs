@@ -21,6 +21,8 @@ namespace MultiSerVIsion.Solution.Application
         OperationResult<List<DeviceEntity>> GetAllDevices();
         OperationResult<DeviceEntity> UpdataDevice(DeviceUpdateIput input);
         OperationResult<DeviceEntity> GetDeviceById(string devId);
+        OperationResult LoadProject();
+        OperationResult SaveProject();
 
     }
 }

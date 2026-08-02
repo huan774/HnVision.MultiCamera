@@ -1,7 +1,7 @@
 ﻿using MultiSerVIsion.Solution.Application.Dtos;
 using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Enums;
-using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
+using MultiSerVIsion.Solution.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +12,11 @@ namespace MultiSerVIsion.Solution.Presentation.Views
 {
     public interface IDeviceInfoParamView
     {
-        void ShowDeviceBasicInfo(DeviceEntity deviceEntity,CameraHardwareRawDto info);
+       /* void ShowDeviceBasicInfo(DeviceEntity deviceEntity, CameraDeviceDto info);*/
         void ClearDeviceInfo();
         void UpdateConnectStatus(CameraStatus status);
+        void ShowOnlineCameraInfo(CameraDeviceDto dto);
+        void ShowConfigCameraInfo(CameraEntity entity);
         void ShowMessage(string message);
 
         event Action OnConnectClicked;

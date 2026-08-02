@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MultiSerVIsion.Solution.Application.Dtos
 {
-    public class CameraDeviceDisplayDto
+    public class CameraDisplayDto
     {
         public string DeviceId { get; set; }
         public string DeviceName { get; set; }

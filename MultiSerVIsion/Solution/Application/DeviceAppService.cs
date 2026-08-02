@@ -17,13 +17,12 @@ namespace MultiSerVIsion.Solution.Application
 {
     public class DeviceAppService: IDeviceAppService
     {
-       /* private readonly IDeviceRepository _repo;*/
+       
         private readonly IDeviceDomainSerivce _domainService;
         private readonly IDeviceManager _manager;
 
-        public DeviceAppService(/*IDeviceRepository repo,*/ IDeviceDomainSerivce domainService,IDeviceManager deviceManager)
+        public DeviceAppService( IDeviceDomainSerivce domainService,IDeviceManager deviceManager)
         {
-           /* _repo = repo;*/
             _domainService = domainService;
             _manager = deviceManager;
         }
@@ -69,6 +68,8 @@ namespace MultiSerVIsion.Solution.Application
             try
             {
                 var entity = DeviceFactory.CreateDevice(input.DeviceType);
+                if (entity == null)
+                    return OperationResult<DeviceEntity>.Fail($"不支持设备类型:{input.DeviceType}");
 
                 entity.DeviceId=Guid.NewGuid().ToString("N");
                 entity.DeviceName=input.DeviceName;
@@ -78,11 +79,11 @@ namespace MultiSerVIsion.Solution.Application
                 entity.IsEnable=input.IsEnable;
 
                 var validate = _domainService.ValidateDeviceEntity(entity);
-
+              
                 if (!validate.IsValid)
                     return OperationResult<DeviceEntity>.Fail(validate.Message);
                 _manager.AddDevice(entity);
-               /* _repo.Add(entity);*/
+              
                 return OperationResult<DeviceEntity>.Succes(entity, entity.GroupTage);
             
             }catch(DeviceDuplicateIdException ex)
@@ -109,7 +110,8 @@ namespace MultiSerVIsion.Solution.Application
                 bool success = _manager.RemoveDevice(devId);
                 return OperationResult<bool>.Succes(success);
 
-            }catch (DeviceDuplicateIdException ex)
+            }
+            catch (DeviceDuplicateIdException ex)
             {
                 LogHelper.Error("删除设备不存在", ex);
                 return OperationResult<bool>.Fail(ex.Message);
@@ -131,10 +133,11 @@ namespace MultiSerVIsion.Solution.Application
             {
                 var dveice = _manager.GetDeviceById(devId);
                 var check = _domainService.CheckToggleEnable(dveice);
+
                 if (!check.IsValid)
                     return OperationResult<bool>.Fail(check.Message);
 
-                _manager.Update(dveice);
+              
                 return OperationResult<bool>.Succes(true);
 
             }catch (DeviceNotFoundException ex)
@@ -192,13 +195,10 @@ namespace MultiSerVIsion.Solution.Application
                 target.DeviceName = input.DeviceName;
                 target.IpAddress=input.IpAddress;
                 target.DeviceType = input.DeviceType;
+                target.GroupTage = input.GroupTag;
                 target.IsEnable=input.IsEnable;
 
-                
-                /*target.MotionConfig = input.MotionCardConfig;
-                target.CameraConfig = input.CameraConfig;*/
-
-                _manager.Update(target);
+              
                 return OperationResult<DeviceEntity>.Succes(target, target.GroupTage);
             }
             catch (DeviceNotFoundException ex)
@@ -230,6 +230,31 @@ namespace MultiSerVIsion.Solution.Application
                 LogHelper.Error("查询设备存储异常", ex);
                 return OperationResult<DeviceEntity>.Fail($"本地存储异常：{ex.Message}");
 
+            }
+        }
+        public OperationResult SaveProject()
+        {
+            try
+            {
+                _manager.SaveToStorage();
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("保存工程", ex);
+                return OperationResult.Fail($"保存工程失败：{ex.Message}");
+            }
+        }
+        public OperationResult LoadProject()
+        {
+            try
+            {
+                _manager.LoadFromStorage();
+                return OperationResult.Succes();
+            }catch(Exception ex)
+            {
+                LogHelper.Error("加载工程异常", ex);
+                return OperationResult.Fail($"加载工程失败：{ex.Message}");
             }
         }
     }

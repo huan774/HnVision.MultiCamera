@@ -1,6 +1,8 @@
 ﻿using MultiSerVIsion.Solution.Application;
+using MultiSerVIsion.Solution.Application.Services;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Domain.Services;
+using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Infrastructure.Repository;
 using MultiSerVIsion.Solution.Presentation.Presenter;
 using MultiSerVIsion.Solution.Presentation.Presenter.Factory;
@@ -59,13 +61,36 @@ namespace MultiSerVIsion
             IDeviceTreeView treeView = new DeviceTreeUC();
             IDeviceDatailView detailView = new CameraDateilUC();
 
+            ICameraHardwareDriver hardwareDriver=new HikCameraHardwareDriver();
+            ICameraDeviceService cameraDevice=new CameraDomainService(manager,hardwareDriver);
+            ICameraAppService cameraAppDevice = new CameraApplicationoService(cameraDevice, manager);
 
-            var treePresenter = new DeviceTressPresenter(treeView, appSvc);
+            IDeviceInfoParamView deviceInfo=new DeviceInfoUC();
+          
+
+            var infoPresent = new DeviceInfoPresenter(deviceInfo, manager, cameraAppDevice);
+
+            var treePresenter = new DeviceTressPresenter(treeView, appSvc,cameraAppDevice);
             var detailPresenter = new DeviceDetailPresenter(appSvc);
 /*
             split_outer.Panel1.Controls.Add(treeView as DeviceTreeUC);*/
            split_Devicetree.Panel1.Controls.Add(treeView as DeviceTreeUC);
-            split_Devicetree.Panel2.Controls.Add(new DeviceInfoUC());
+            split_Devicetree.Panel2.Controls.Add(deviceInfo as DeviceInfoUC);
+
+            treeView.ConfigDeviceSelected += deviceId =>
+            {
+                infoPresent.LoadConfigCamera(deviceId);
+            };
+
+            treeView.OnlineDeviceSelected += async dto =>
+            {
+               await infoPresent.LoadDeviceInfoAsync(dto);
+            };
+
+            treeView.NoDeviceSelected += () =>
+            {
+                infoPresent.Clear();
+            };
 
             detailPresenter.OnCreaateDetailUc += (System.Windows.Forms.UserControl uc) =>
             {
@@ -103,6 +128,7 @@ namespace MultiSerVIsion
             };
            
         }
+       
         private void InitLayoutSplit()
         {
             split_outer.FixedPanel = FixedPanel.Panel1;

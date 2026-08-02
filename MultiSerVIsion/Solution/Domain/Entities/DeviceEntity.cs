@@ -24,10 +24,10 @@ namespace MultiSerVIsion.Solution.Domain.Entities
         public bool IsEnable { get; set; } = true;
 
         [JsonIgnore]
-        public int Handle { get; /*protected*/ set; } = -1;
+        public int Handle { get;  set; } = -1;
 
         [JsonIgnore]
-        public DeviceConnectionStatue ConnectionStatus { get; /*protected*/ set; } = DeviceConnectionStatue.Disconnected;
+        public DeviceConnectionStatue ConnectionStatus { get; set; } = DeviceConnectionStatue.Disconnected;
 
         public abstract DeviceEntity ShallowClone();
 

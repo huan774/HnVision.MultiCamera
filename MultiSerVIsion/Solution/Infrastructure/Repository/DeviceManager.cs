@@ -10,7 +10,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
 {
     public class DeviceManager:IDeviceManager
     {
-        private readonly List<DeviceEntity> _device = new List<DeviceEntity>();
+        private readonly List<DeviceEntity> _inMemoryStore = new List<DeviceEntity>();
         private readonly IDeviceRepository _deviceRepository;
         public DeviceManager(IDeviceRepository deviceRepository)
         {
@@ -19,22 +19,22 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
         public List<DeviceEntity> GetAllDevices()
         {
             // 返回副本，避免外部直接修改集合结构；如需高性能可返回AsReadOnly
-            return _device.ToList();
+            return _inMemoryStore.ToList();
         }
 
         public DeviceEntity GetDeviceById(string deviceId)
         {
-            return _device.FirstOrDefault(d => d.DeviceId == deviceId);
+            return _inMemoryStore.FirstOrDefault(d => d.DeviceId == deviceId);
         }
 
         public List<T> GetDevices<T>() where T : DeviceEntity
         {
-            return _device.OfType<T>().ToList();
+            return _inMemoryStore.OfType<T>().ToList();
         }
 
         public List<DeviceEntity> GetDevicesByGroup(string groupTag)
         {
-            return _device
+            return _inMemoryStore
                 .Where(d => d.GroupTage.Equals(groupTag, StringComparison.Ordinal))
                 .ToList();
         }
@@ -51,7 +51,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
             if (string.IsNullOrWhiteSpace(device.DeviceId)) return false;
 
             // 2. 防重复：ID已存在则拒绝新增
-            if (_device.Any(d => d.DeviceId == device.DeviceId))
+            if (_inMemoryStore.Any(d => d.DeviceId == device.DeviceId))
                 return false;
 
             // 3. 执行实体自校验，不合法不入库
@@ -59,7 +59,8 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
             if (!validateResult.IsValid)
                 return false;
 
-            _device.Add(device);
+            _inMemoryStore.Add(device);
+            _deviceRepository.Add(device);
             return true;
         }
 
@@ -67,28 +68,28 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
         {
             var target = GetDeviceById(deviceId);
             if (target == null) return false;
-            return _device.Remove(target);
+            return _deviceRepository.Remove(deviceId); 
         }
 
         public void ClearAllDevices()
         {
-            _device.Clear();
+            _inMemoryStore.Clear();
         }
         public void LoadFromStorage()
         {
             var devices = _deviceRepository.LoadAll();
-            _device.Clear();
-            _device.AddRange(devices);
+            _inMemoryStore.Clear();
+            _inMemoryStore.AddRange(devices);
         }
 
         public void SaveToStorage()
         {
             // 传入内存集合的副本，避免序列化过程中集合被修改
-            _deviceRepository.SaveAll(_device.ToList());
+            _deviceRepository.SaveAll(_inMemoryStore.ToList());
         }
-        public void Update(DeviceEntity device)
+       /* public void Update(DeviceEntity device)
         {
              _deviceRepository.Update(device);
-        }
+        }*/
     }
 }

@@ -35,218 +35,167 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
             {
                 Directory.CreateDirectory(folder);
             }
-
+/*
             if (!File.Exists(_storagePath))
             {
                 WriteAll(new List<DeviceEntity>());
-            }
+            }*/
         }
-        private List<DeviceEntity> ReadAll()
+        public List<DeviceEntity> LoadAll()
         {
-
             if (!File.Exists(_storagePath))
+                return new List<DeviceEntity>();
+
+            var json = File.ReadAllText(_storagePath);
+            try
             {
+                return JsonSerializer.Deserialize<List<DeviceEntity>>(json, JsonConfigHelper.Default)
+                       ?? new List<DeviceEntity>();
+            }
+            catch (JsonException)
+            {
+                // 配置文件损坏时兜底返回空，避免程序崩溃，可按需补充日志
                 return new List<DeviceEntity>();
             }
-
-            return FileloHelper.ReadJsonFile<List<DeviceEntity>>(_storagePath, JsonConfigHelper.Default);
         }
 
-        private void WriteAll(List<DeviceEntity> list)
+        public void SaveAll(List<DeviceEntity> devices)
         {
-            FileloHelper.WriteJsonFile(_storagePath, list, JsonConfigHelper.Default);
+            // 原子写入：先写临时文件，再替换原文件，避免断电/崩溃导致配置半写损坏
+            var tempPath = _storagePath + ".tmp";
+            var json = JsonSerializer.Serialize(devices, typeof(List<DeviceEntity>), JsonConfigHelper.Default);
+            File.WriteAllText(tempPath, json);
+
+            if (File.Exists(_storagePath))
+                File.Replace(tempPath, _storagePath, null);
+            else
+                File.Move(tempPath, _storagePath);
         }
 
         public DeviceEntity GetById(string devId)
         {
-            var list = ReadAll();
-            return list.FirstOrDefault(d => d.DeviceId == devId);
+            return LoadAll().FirstOrDefault(d => d.DeviceId == devId);
         }
 
-        public void Update(DeviceEntity deviceEntity)
+        public void Add(DeviceEntity device)
         {
-            try
-            {
-                var list = ReadAll();
-                var index = list.FindIndex(d => d.DeviceId == deviceEntity.DeviceId);
-                if (index == -1)
-                    throw new KeyNotFoundException($"未找到设备{deviceEntity.DeviceId},无法更新");
-
-                list[index] = deviceEntity;
-                WriteAll(list);
-                LogHelper.Info($"更新设备配置：{deviceEntity.DeviceName}({deviceEntity.DeviceId})");
-            }
-            catch (Exception ex)
-            {
-                LogHelper.Info($"仓储Add写入失败{ex}");
-                throw;
-            }
+            var all = LoadAll();
+            all.Add(device);
+            SaveAll(all);
         }
-        public void Add(DeviceEntity deviceEntity)
-        {
-            var list = ReadAll();
-            if (list.Any(d => d.DeviceId == deviceEntity.DeviceId))
-                throw new InvalidOperationException($"设备ID{deviceEntity.DeviceId}");
 
-            list.Add(deviceEntity);
-            WriteAll(list);
-            LogHelper.Info($"新增设备成功：{deviceEntity.DeviceName}({deviceEntity.DeviceId})");
-
-        }
-        public bool Remove(string deviceEntity)
+        public bool Remove(string devId)
         {
-            var list = ReadAll();
-            var target = list.FirstOrDefault(d => d.DeviceId == deviceEntity);
+            var all = LoadAll();
+            var target = all.FirstOrDefault(d => d.DeviceId == devId);
             if (target == null) return false;
-
-            list.Remove(target);
-            WriteAll(list);
-            LogHelper.Info($"删除设备成功：{target.DeviceName}({deviceEntity})");
-
+            all.Remove(target);
+            SaveAll(all);
             return true;
         }
-        public List<DeviceEntity> LoadAll()
+
+        public void Update(DeviceEntity device)
         {
-            try
+            var all = LoadAll();
+            var index = all.FindIndex(d => d.DeviceId == device.DeviceId);
+            if (index < 0) return;
+            all[index] = device;
+            SaveAll(all);
+        }
+
+        /*    private List<DeviceEntity> ReadAll()
             {
-                return ReadAll();
+
+                if (!File.Exists(_storagePath))
+                {
+                    return new List<DeviceEntity>();
+                }
+
+                return FileloHelper.ReadJsonFile<List<DeviceEntity>>(_storagePath, JsonConfigHelper.Default);
             }
-            catch (StorageIoException ex)
+
+            private void WriteAll(List<DeviceEntity> list)
             {
-
-                LogHelper.Error($"读取设备配置文件失败，禁止生成空数据覆盖原有文件：{ex.Message}", ex);
-                throw;
+                FileloHelper.WriteJsonFile(_storagePath, list, JsonConfigHelper.Default);
             }
-        }
-        public void SaveAll(List<DeviceEntity> devices)
-        {
-            var json = JsonSerializer.Serialize(devices, typeof(List<DeviceEntity>), new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_storagePath, json);
-        }
 
-        public string GetGroupTag(string devId)
-        {
-            var dev = GetById(devId);
-            return dev.GroupTage ?? string.Empty;
-        }
-        public List<DeviceEntity> GetByGroup(string groupId)
-        {
-            var list = ReadAll();
-            return list.Where(d => d.GroupTage == groupId).ToList();
-        }
-        /* private readonly string _storagePath;
+            public DeviceEntity GetById(string devId)
+            {
+                var list = ReadAll();
+                return list.FirstOrDefault(d => d.DeviceId == devId);
+            }
 
-         public DeviceRepository()
-         {
-             _storagePath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory,
-            Shared.GlobalConst.AppDataFolder,
-            Shared.GlobalConst.DeviceJsonFIleName
-            );
-             LogHelper.Info($"当前设备存储文件路径：{_storagePath}");
+            public void Update(DeviceEntity deviceEntity)
+            {
+                try
+                {
+                    var list = ReadAll();
+                    var index = list.FindIndex(d => d.DeviceId == deviceEntity.DeviceId);
+                    if (index == -1)
+                        throw new KeyNotFoundException($"未找到设备{deviceEntity.DeviceId},无法更新");
 
-             string folder = Path.GetDirectoryName(_storagePath);
-             if (!Directory.Exists(folder))
-             {
-                 Directory.CreateDirectory(folder);
-             }
+                    list[index] = deviceEntity;
+                    WriteAll(list);
+                    LogHelper.Info($"更新设备配置：{deviceEntity.DeviceName}({deviceEntity.DeviceId})");
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Info($"仓储Add写入失败{ex}");
+                    throw;
+                }
+            }
+            public void Add(DeviceEntity deviceEntity)
+            {
+                var list = ReadAll();
+                if (list.Any(d => d.DeviceId == deviceEntity.DeviceId))
+                    throw new InvalidOperationException($"设备ID{deviceEntity.DeviceId}");
 
-             if (!File.Exists(_storagePath))
-             {
-                 SaveAll(new List<DeviceEntity>());
-             }
+                list.Add(deviceEntity);
+                WriteAll(list);
+                LogHelper.Info($"新增设备成功：{deviceEntity.DeviceName}({deviceEntity.DeviceId})");
 
-         }
-         public List<DeviceEntity> LoadAll()
-         {
-             if (!File.Exists(_storagePath))
-                 return new List<DeviceEntity>();
+            }
+            public bool Remove(string deviceEntity)
+            {
+                var list = ReadAll();
+                var target = list.FirstOrDefault(d => d.DeviceId == deviceEntity);
+                if (target == null) return false;
 
-             var json = File.ReadAllText(_storagePath);
+                list.Remove(target);
+                WriteAll(list);
+                LogHelper.Info($"删除设备成功：{target.DeviceName}({deviceEntity})");
 
-             return JsonSerializer.Deserialize<List<DeviceEntity>>(json) ?? new List<DeviceEntity>();
+                return true;
+            }
+            public List<DeviceEntity> LoadAll()
+            {
+                try
+                {
+                    return ReadAll();
+                }
+                catch (StorageIoException ex)
+                {
 
-       *//*      try 
-             {
-                 var list = JsonSerializer.Deserialize<List<DeviceEntity>>(json);
-                 return list ?? new List<DeviceEntity>();
-             }
-             catch (NotSupportedException)
-             {
-                 return LoadAndMigrateOldFormat(json);
-             }*//*
-         }
+                    LogHelper.Error($"读取设备配置文件失败，禁止生成空数据覆盖原有文件：{ex.Message}", ex);
+                    throw;
+                }
+            }
+            public void SaveAll(List<DeviceEntity> devices)
+            {
+                var json = JsonSerializer.Serialize(devices, typeof(List<DeviceEntity>), new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(_storagePath, json);
+            }
 
-         public void SaveAll(List<DeviceEntity> devices)
-         {
-             var json = JsonSerializer.Serialize(devices, typeof(List<DeviceEntity>) ,new JsonSerializerOptions { WriteIndented = true });
-             File.WriteAllText(_storagePath, json);
-         }
-
-         // 单条操作内部本质还是全量读写
-         public void Add(DeviceEntity device)
-         {
-             var all = LoadAll();
-             all.Add(device);
-             SaveAll(all);
-         }
-
-         public bool Remove(string devId)
-         {
-             var all = LoadAll();
-             var target = all.FirstOrDefault(d => d.DeviceId == devId);
-
-             if (target == null) return false;
-             all.Remove(target);
-             SaveAll(all);
-             return true;
-         }
-
-         public void Update(DeviceEntity device)
-         {
-             var all = LoadAll();
-             var index = all.FindIndex(d => d.DeviceId == device.DeviceId);
-             if (index < 0) return;
-             all[index] = device;
-             SaveAll(all);
-         }
-
-         public DeviceEntity GetById(string devId)
-         {
-             return LoadAll().FirstOrDefault(d => d.DeviceId == devId);
-         }
-
-       /* private List<DeviceEntity> LoadAndMigrateOldFormat(string json)
-         {
-             var oldDevice=JsonSerializer.Deserialize<List<OldDeviceEntity>>(json);
-             var newList=new List<DeviceEntity>();
-
-             foreach(var old in oldDevice)
-             {
-                 var newDevice = old.DeviceType;
-                 switch (newDevice)
-                 { 
-                     case "Camera":
-                         return new CameraEntity();
-
-                 }
-
-
-             }
-
-         }*//*
-         internal class OldDeviceEntity
-         {
-             public string DeviceId { get; set; }
-             public string DeviceName { get; set; }
-             public string GroupTag { get; set; }
-             public string IpAddress { get; set; }
-             public string DeviceType { get; set; }
-             public bool IsEnable { get; set; }
-             public CameraAllConfig CameraConfig { get; set; }
-             *//*public MotionCardAllConfig MotionConfig { get; set; }*//*
-         }
-     }*/
-
+            public string GetGroupTag(string devId)
+            {
+                var dev = GetById(devId);
+                return dev.GroupTage ?? string.Empty;
+            }
+            public List<DeviceEntity> GetByGroup(string groupId)
+            {
+                var list = ReadAll();
+                return list.Where(d => d.GroupTage == groupId).ToList();
+            }
+          */
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
+using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
@@ -17,7 +18,7 @@ namespace MultiSerVIsion.Solution.Domain.Entities
         public CameraAllConfig CameraAllConfig { get; set; }= new CameraAllConfig();
 
         [JsonIgnore]
-        public CameraStatus DetailStatus { get; /*protected*/ set; } = CameraStatus.Idle;
+        public CameraStatus DetailStatus { get; set; } = CameraStatus.Idle;
 
         public override DeviceEntity ShallowClone()
         {
@@ -42,7 +43,7 @@ namespace MultiSerVIsion.Solution.Domain.Entities
             }
             return ValidationResult.Success();
         }
-        public static CameraEntity CreateFormScanResult(CameraHardwareRawDto scanResult)
+        public static CameraEntity CreateFormScanResult(CameraDeviceDto scanResult)
         {
             var cam=new CameraEntity();
             cam.DeviceId = Guid.NewGuid().ToString("N");
@@ -60,7 +61,6 @@ namespace MultiSerVIsion.Solution.Domain.Entities
     }
     public class CameraAllConfig
     {
-      
         public CameraConnectConfig ConnectConfig { get;  set; }=new CameraConnectConfig();
 
         public CameraParamConfig ParamConfig { get; set; } = new CameraParamConfig();

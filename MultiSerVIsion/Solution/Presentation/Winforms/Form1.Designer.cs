@@ -256,20 +256,20 @@
             // 
             // tabPageVision
             // 
-            this.tabPageVision.Location = new System.Drawing.Point(8, 39);
+            this.tabPageVision.Location = new System.Drawing.Point(8, 45);
             this.tabPageVision.Name = "tabPageVision";
             this.tabPageVision.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageVision.Size = new System.Drawing.Size(984, 638);
+            this.tabPageVision.Size = new System.Drawing.Size(984, 632);
             this.tabPageVision.TabIndex = 1;
             this.tabPageVision.Text = "视觉图像";
             this.tabPageVision.UseVisualStyleBackColor = true;
             // 
             // tabPage3
             // 
-            this.tabPage3.Location = new System.Drawing.Point(8, 39);
+            this.tabPage3.Location = new System.Drawing.Point(8, 45);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(984, 638);
+            this.tabPage3.Size = new System.Drawing.Size(984, 632);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "标定配置";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -386,7 +386,6 @@
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "HnVision  V1.0.0";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);

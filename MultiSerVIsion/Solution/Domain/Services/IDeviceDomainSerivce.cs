@@ -15,6 +15,5 @@ namespace MultiSerVIsion.Solution.Domain.Services
         ValidationResult CheckToggleEnable(DeviceEntity device);
         ValidationResult ValidateDeviceEntity(DeviceEntity entity);
 
-       
     }
 }

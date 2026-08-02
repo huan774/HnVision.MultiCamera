@@ -2,8 +2,10 @@
 using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
+using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
+using MultiSerVIsion.Solution.Shared.Extensions;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -25,9 +27,10 @@ namespace MultiSerVIsion.Solution.Domain.Services
             _deviceManager = deviceManager;
             _hardwareDriver = hardwareDriver;
         }
-        public async Task<List<CameraHardwareRawDto>> ScanAllCamerasAsync()
+        public async Task<List<CameraDeviceDto>> ScanAllCamerasAsync()
         {
-            return await _hardwareDriver.ScanAllCameraAsync();
+            var rawList= await _hardwareDriver.ScanAllCameraAsync();
+            return rawList.ToCameraDeviceDtoList();
         }
 
         public async Task<OperationResult<List<CameraEntity>>> AutoCreateFromScanAsync()
@@ -75,8 +78,6 @@ namespace MultiSerVIsion.Solution.Domain.Services
                 {
                     return OperationResult.Fail($"相机连接失败：{ex.Message}");
                 }
-            
-
         }
         public OperationResult DisconnectCamera(string devId)
         {

@@ -2,6 +2,7 @@
 using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
+using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
@@ -14,7 +15,7 @@ namespace MultiSerVIsion.Solution.Domain.Services
 {
     public interface ICameraDeviceService
     {
-        Task<List<CameraHardwareRawDto>> ScanAllCamerasAsync();
+        Task<List<CameraDeviceDto>> ScanAllCamerasAsync();
 
         /// <summary>扫描后批量自动生成组态设备（不存在则新增，存在则跳过）</summary>
         Task<OperationResult<List<CameraEntity>>> AutoCreateFromScanAsync();

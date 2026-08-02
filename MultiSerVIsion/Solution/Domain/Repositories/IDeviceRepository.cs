@@ -26,6 +26,6 @@ namespace MultiSerVIsion.Solution.Domain.Repositories
         bool Remove(string devId);
 
         /// <summary>更新单个设备</summary>
-        void Update(DeviceEntity device);
+        void Update(DeviceEntity device); 
     }
 }

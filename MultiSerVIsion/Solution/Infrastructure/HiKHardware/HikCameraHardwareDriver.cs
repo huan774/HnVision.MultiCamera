@@ -77,7 +77,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
                 info.InterfaceType = "GigE";
                 info.IpAddress = gigeInfo.nCurrentIp.ToString();
                 info.SerialNumber = gigeInfo.chSerialNumber;
-                info.ModelName = gigeInfo.chModelName;
+                info.Model = gigeInfo.chModelName;
                 
             }
             else if (raw.nTLayerType == MyCamera.MV_USB_DEVICE)
@@ -88,10 +88,10 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
 
                 info.InterfaceType = "USB";
                 info.SerialNumber = usbInfo.chSerialNumber.ToString();
-                info.ModelName = usbInfo.chModelName;
+                info.Model = usbInfo.chModelName;
                 info.IpAddress = string.Empty;
             }
-            return null /*info*/;
+            return  info;
         }
         public class HardwareException : Exception
         { 

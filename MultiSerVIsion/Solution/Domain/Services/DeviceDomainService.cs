@@ -26,14 +26,14 @@ namespace MultiSerVIsion.Solution.Domain.Services
             return copy;
        }
        public ValidationResult CheckToggleEnable(DeviceEntity device) 
-        {
+       {
             return ValidationResult.Success();
-        }
+       }
        public ValidationResult ValidateDeviceEntity(DeviceEntity entity)
-        {
+       {
             if (entity == null)
                 return ValidationResult.Failure("数据设备不能为空");
             return entity.SelfValidate();
-        }
+       }
     }
 }
