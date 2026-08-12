@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MultiSerVIsion.Solution.Presentation.Views;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,88 +12,78 @@ using System.Windows.Forms;
 
 namespace MultiSerVIsion.Solution.Presentation.UserControls
 {
-    public partial class UCVisionView : BaseViewUc
+    public partial class UCVisionView : BaseViewUc,IVisionView
     {
-        public event EventHandler ExposureValueChanged;
-        public event EventHandler GainValueChanged;
-        public event EventHandler TriggerModeChanged;
-        public event EventHandler LightSliderChanged;
+        public event Action StartGrabRequested;
+        public event Action StopGrabRequested;
 
-        public event EventHandler BtnSingleGrabClick;
-        public event EventHandler BtnContinuousGrabClick;
-        public event EventHandler BtnStopGrabClick;
-        public event EventHandler BtnSaveImageClick;
-        public event EventHandler BtnClearImgClick;
         public UCVisionView()
         {
             InitializeComponent();
-           /* nudExposure.ValueChanged += (s, e) => ExposureValueChanged?.Invoke(this, EventArgs.Empty);
-            nudGain.ValueChanged += (s, e) => GainValueChanged?.Invoke(this, EventArgs.Empty);
-            cbxTriggerMode.SelectedIndexChanged += (s, e) => TriggerModeChanged?.Invoke(this, EventArgs.Empty);
-            trackLight.ValueChanged += (s, e) => LightSliderChanged?.Invoke(this, EventArgs.Empty);
-
-            btnSingleGrab.Click += (s, e) => BtnSingleGrabClick?.Invoke(this, EventArgs.Empty);
-            btnContinuousGrab.Click += (s, e) => BtnContinuousGrabClick?.Invoke(this, EventArgs.Empty);
-            btnStopGrab.Click += (s, e) => BtnStopGrabClick?.Invoke(this, EventArgs.Empty);
-            btnSaveImage.Click += (s, e) => BtnSaveImageClick?.Invoke(this, EventArgs.Empty);
-            btnClearImg.Click += (s, e) => BtnClearImgClick?.Invoke(this, EventArgs.Empty);*/
+            SetGrabButtonsEnabled(canStart: true, canStop: false);
         }
+        
         public override void OnViewShow()
         {
             base.OnViewShow();
-           /* lblImgStatus.Text = "未连接相机";*/
-
         }
         public override void SetUIPlaceholder()
         {
-           /* nudExposure.Value = 1000; ;
-            nudExposure.Value = 1;
-            trackLight.Value = 50;
-            cbxTriggerMode.SelectedIndex = 0;
-            picVisionImg.Image = null;
-            lblImgStatus.Text = "无图像";*/
+          
 
         }
-        public Bitmap ShowImage
+        public void UpdateFrame(Bitmap frame)
         {
-            set
+            if (PitCamera1.InvokeRequired)
             {
-               /* picVisionImg.Image?.Dispose();
-                picVisionImg.Image = value;*/
+                PitCamera1.BeginInvoke(new Action(() => UpdateFrame(frame)));
+                return;
             }
+
+            // 释放旧图像，避免内存泄漏
+            var oldImg = PitCamera1.Image;
+            PitCamera1.Image = frame;
+            oldImg?.Dispose();
         }
-/*        public string ImageStatusText
+        public void UpdateRunInfo(string info)
         {
-            set => lblImgStatus.Text = value;
-        }*/
-
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        
+        }
+        public void SetGrabButtonsEnabled(bool canStart, bool canStop)
         {
-
+            btn_StartGrab.Enabled = canStart;
+            btn_StopGrab.Enabled = canStop;
+        }
+        public void ShowMessage(string message, bool isError = false)
+        {
+            MessageBox.Show(message, isError ? "错误" : "提示",
+                MessageBoxButtons.OK, isError ? MessageBoxIcon.Error : MessageBoxIcon.Information);
+        }
+        public void ClearDisplay()
+        {
+            if (PitCamera1.InvokeRequired)
+            {
+                PitCamera1.BeginInvoke(new Action(ClearDisplay));
+                return;
+            }
+            PitCamera1.Image?.Dispose();
+            PitCamera1.Image = null;
+           /* lbl_RunInfo.Text = "未采集";*/
+        }
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            StopGrabRequested?.Invoke();
+            base.OnHandleDestroyed(e);
         }
 
-        /* public decimal Exposure
-         {
-             get => nudExposure.Value;
-             set => nudExposure.Value = value;
-         }
+        private void btn_StopGrab_Click(object sender, EventArgs e)
+        {
+            StopGrabRequested?.Invoke();
+        }
 
-         public decimal Gain
-         {
-             get => nudGain.Value;
-             set => nudGain.Value = value;
-         }
-
-         public int LightValue
-         {
-             get => trackLight.Value;
-             set => trackLight.Value = value;
-         }
-
-         public string TriggerMode
-         {
-             get => cbxTriggerMode.Text;
-             set => cbxTriggerMode.Text = value;
-         }*/
+        private void btn_StartGrab_Click(object sender, EventArgs e)
+        {
+            StartGrabRequested?.Invoke();
+        }
     }
 }

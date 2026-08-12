@@ -37,12 +37,10 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         public event Action<CameraDeviceDto> OnlineDeviceSelected;
         public event Action NoDeviceSelected;
 
-
         private TreeNode _rightClickGroupNode;
         private TreeNode _rightClickNode;
 
         private  CameraDeviceDto _selectedOnlineCamera;
-
         public CameraDeviceDto SelectedOnlineCamera => _selectedOnlineCamera;
         public DeviceTreeUC()
         {

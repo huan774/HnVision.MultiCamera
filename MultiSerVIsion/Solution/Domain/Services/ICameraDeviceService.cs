@@ -15,27 +15,37 @@ namespace MultiSerVIsion.Solution.Domain.Services
 {
     public interface ICameraDeviceService
     {
-        Task<List<CameraDeviceDto>> ScanAllCamerasAsync();
+       /// <summary>
+    /// 业务校验：判断当前设备是否允许连接
+    /// 规则：已连接设备不可重复连接、故障设备需先复位、离线设备不允许直接取流
+    /// </summary>
+    OperationResult ValidateCanConnect(CameraEntity device);
 
-        /// <summary>扫描后批量自动生成组态设备（不存在则新增，存在则跳过）</summary>
-        Task<OperationResult<List<CameraEntity>>> AutoCreateFromScanAsync();
+    /// <summary>
+    /// 业务校验：判断当前设备是否允许开启取流
+    /// 规则：未连接设备不能取流、正在采集中不能重复开启
+    /// </summary>
+    OperationResult ValidateCanStartStream(CameraEntity device);
 
-        /// <summary>连接指定相机</summary>
-        OperationResult ConnectCamera(string deviceId);
+    /// <summary>
+    /// 领域逻辑：将扫描结果批量转换为设备实体，自动去重、填充默认参数
+    /// </summary>
+    /// <param name="scanResult">扫描到的在线相机列表</param>
+    /// <param name="existingDevices">已存在的组态设备</param>
+    /// <param name="skippedSerials">跳过的重复序列号</param>
+   /* List<CameraEntity> CreateEntitiesFromScan(
+        List<CameraDeviceDto> scanResult,
+        List<CameraEntity> existingDevices,
+        out List<string> skippedSerials);*/
 
-        /// <summary>断开指定相机</summary>
-        OperationResult DisconnectCamera(string deviceId);
+    /// <summary>
+    /// 领域逻辑：应用连接状态变更，更新实体状态
+    /// </summary>
+    void ApplyConnectionStatus(CameraEntity device, bool isConnected);
 
-        /// <summary>开启指定相机取流</summary>
-        OperationResult OpenStream(string deviceId);
-
-        /// <summary>停止指定相机取流</summary>
-        OperationResult StopStream(string deviceId);
-
-        /// <summary>设置相机曝光时间</summary>
-       /* OperationResult SetExposure(string deviceId, double exposureTimeUs);
-
-        /// <summary>从硬件读取实时运行状态</summary>
-        OperationResult<CameraRuntimeStateDto> GetRuntimeState(string deviceId);*/
+    /// <summary>
+    /// 业务校验：参数配置是否符合业务范围
+    /// </summary>
+    OperationResult ValidateCameraConfig(CameraParamConfig config);
     }
 }

@@ -48,7 +48,7 @@ namespace MultiSerVIsion.Solution.Shared.Extensions
 
             // 填充相机连接参数
             entity.CameraAllConfig.ConnectConfig.SerialNumber = scannedCamera.SerialNumber;
-            entity.CameraAllConfig.ConnectConfig.IpAddress = scannedCamera.IpAddress;
+           /* entity.CameraAllConfig.ConnectConfig.IpAddress = scannedCamera.IpAddress;*/
             entity.CameraAllConfig.ConnectConfig.InterfaceType = scannedCamera.InterfaceType;
 
             return entity;

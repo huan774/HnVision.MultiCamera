@@ -8,6 +8,7 @@ namespace MultiSerVIsion.Solution.Domain.Models
 {
     public class CameraDeviceDto
     {
+        public string DeviceId { get; set; } = string.Empty;
         public string IpAddress { get; set; } = string.Empty;
         public string SerialNumber { get; set; } = string.Empty;
         public string Model { get; set; } = string.Empty;

@@ -31,8 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DeviceInfoUC));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.lbl_DeviceType = new System.Windows.Forms.Label();
             this.lbl_DeviceName = new System.Windows.Forms.Label();
+            this.lbl_DeviceType = new System.Windows.Forms.Label();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btn_Connect = new System.Windows.Forms.ToolStripButton();
@@ -86,15 +86,6 @@
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1137, 30);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
-            // lbl_DeviceType
-            // 
-            this.lbl_DeviceType.AutoSize = true;
-            this.lbl_DeviceType.Location = new System.Drawing.Point(484, 0);
-            this.lbl_DeviceType.Name = "lbl_DeviceType";
-            this.lbl_DeviceType.Size = new System.Drawing.Size(106, 24);
-            this.lbl_DeviceType.TabIndex = 1;
-            this.lbl_DeviceType.Text = "设备类型";
-            // 
             // lbl_DeviceName
             // 
             this.lbl_DeviceName.AutoSize = true;
@@ -103,6 +94,15 @@
             this.lbl_DeviceName.Size = new System.Drawing.Size(82, 24);
             this.lbl_DeviceName.TabIndex = 2;
             this.lbl_DeviceName.Text = "设备名";
+            // 
+            // lbl_DeviceType
+            // 
+            this.lbl_DeviceType.AutoSize = true;
+            this.lbl_DeviceType.Location = new System.Drawing.Point(484, 0);
+            this.lbl_DeviceType.Name = "lbl_DeviceType";
+            this.lbl_DeviceType.Size = new System.Drawing.Size(106, 24);
+            this.lbl_DeviceType.TabIndex = 1;
+            this.lbl_DeviceType.Text = "设备类型";
             // 
             // flowLayoutPanel1
             // 
@@ -121,7 +121,7 @@
             this.btn_Disconnect});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(114, 42);
+            this.toolStrip1.Size = new System.Drawing.Size(176, 42);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -133,6 +133,7 @@
             this.btn_Connect.Name = "btn_Connect";
             this.btn_Connect.Size = new System.Drawing.Size(46, 36);
             this.btn_Connect.Text = "连接相机";
+            this.btn_Connect.Click += new System.EventHandler(this.btn_Connect_Click);
             // 
             // btn_Disconnect
             // 

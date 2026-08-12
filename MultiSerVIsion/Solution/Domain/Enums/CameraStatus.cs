@@ -13,6 +13,8 @@ namespace MultiSerVIsion.Solution.Domain.Enums
         Connected,
         Streaming,
         Error,
-        
+        Fault,
+        Offline
+
     }
 }

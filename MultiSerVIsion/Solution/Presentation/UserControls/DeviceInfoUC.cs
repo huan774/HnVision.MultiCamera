@@ -46,7 +46,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             lbl_DeviceName.Text = entity.DeviceName;
             lbl_HardwareModel.Text = entity.CameraAllConfig.ConnectConfig.Model;
             lbl_Serial.Text = entity.CameraAllConfig.ConnectConfig.SerialNumber;
-            lbl_ip.Text = entity.CameraAllConfig.ConnectConfig.IpAddress;
+        /*    lbl_ip.Text = entity.CameraAllConfig.ConnectConfig.IpAddress.ToString();*/
             lbl_HardwareModel.Text = entity.CameraAllConfig.ConnectConfig.InterfaceType;
         }
 
@@ -85,6 +85,9 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             MessageBox.Show(message);
         }
 
-        
+        private void btn_Connect_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

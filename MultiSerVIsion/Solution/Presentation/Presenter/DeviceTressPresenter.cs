@@ -1,9 +1,12 @@
 ﻿using MultiSerVIsion.Solution.Application;
 using MultiSerVIsion.Solution.Application.Dtos;
 using MultiSerVIsion.Solution.Application.Services;
+using MultiSerVIsion.Solution.Domain.Contexts;
 using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Models;
-using MultiSerVIsion.Solution.Presentation.UserControls;
+using MultiSerVIsion.Solution.Domain.Repositories;
+using MultiSerVIsion.Solution.Infrastructure.Events;
+using MultiSerVIsion.Solution.Presentation.Events;
 using MultiSerVIsion.Solution.Presentation.Views;
 using MultiSerVIsion.Solution.Presentation.Winforms;
 using MultiSerVIsion.Solution.Shared.Exceptions;
@@ -11,6 +14,7 @@ using MultiSerVIsion.Solution.Shared.Helpers;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
 using System.Collections.Generic;
+/*using System.Drawing;*/
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,19 +22,42 @@ using System.Windows.Forms;
 
 namespace MultiSerVIsion.Solution.Presentation.Presenter
 {
-    public class DeviceTressPresenter
+    public class DeviceTressPresenter:BasePresenter
     {
       
         private readonly IDeviceTreeView _view;
         private readonly IDeviceAppService _appService;
         private readonly ICameraAppService _cameraAppService;
+        private readonly IEventBus _eventBus;
+        private readonly IDeviceContext _deviceContext;
+        private readonly IDeviceManager _deviceManager;
 
-        public DeviceTressPresenter(IDeviceTreeView view, IDeviceAppService appService,ICameraAppService cameraAppService)
+        public DeviceTressPresenter(
+            IEventBus eventBus,
+            IDeviceTreeView view,
+            IDeviceAppService appService,
+            IDeviceContext deviceContext,
+            IDeviceManager deviceManager,
+            ICameraAppService cameraAppService)
         {
             _view = view;
+            _eventBus=eventBus;
             _appService = appService;
-            _cameraAppService= cameraAppService;
+            _deviceContext = deviceContext;
+            _deviceManager = deviceManager;
+            _cameraAppService = cameraAppService;
 
+
+            _appService.LoadProject();
+           /* LoadAllDeviceOnStart();*/
+            
+        }
+        public override void Init()
+        {
+          /*  _view.DeviceNodeSelected += OnDeviceSelected;*/
+            _view.ConfigDeviceSelected += OnConfigDeviceSelected;
+            _view.NoDeviceSelected += OnNoDeviceSelected;
+            _view.OnlineDeviceSelected += OnOnlineDeviceSelected;
 
             _view.AddDeviceRequest += OnAddDeviceRequest;
             _view.RemoveDeviceRequest += OnRemoveDeviceRequest;
@@ -38,11 +65,9 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             _view.ToggleDeviceEnableRequest += OnToggleDeviceEnableRequest;
             _view.ViewLoaded += OnViewLoaded;
             _view.AddToConfigRequsted += () => AddSelectedCameraToConfig();
-            _view.RefreshSearchRequested+=async()=>await SearchOnlineCameras();
-
-            _appService.LoadProject();
-           /* LoadAllDeviceOnStart();*/
-            
+            _view.RefreshSearchRequested += async () => await SearchOnlineCameras();
+            // 初始化加载设备树
+           /* RefreshTree();*/
         }
         public async void OnViewLoaded()
         {
@@ -51,6 +76,32 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             // 自动搜索局域网在线相机
             await SearchOnlineCameras();
         }
+        private void OnOnlineDeviceSelected(CameraDeviceDto dto)
+        {
+            // 1. 先更新全局上下文（状态落地）
+            _deviceContext.SetOnlineCamera(dto);
+            // 2. 发布事件，通知所有订阅者
+            _eventBus.Publish(new OnlineCameraSelectedEvent(dto));
+          
+        }
+
+        private void OnConfigDeviceSelected(string deviceId)
+        {
+            var device = _deviceManager.GetDeviceById(deviceId) as CameraEntity;
+            if (device == null) return;
+
+            _deviceContext.SetConfigDevice(deviceId, device);
+            // 发布组态设备选中事件
+            _eventBus.Publish(new ConfigDeviceSelectedEvent(deviceId));
+        }
+
+        private void OnNoDeviceSelected()
+        {
+            _deviceContext.ClearSelection();
+            // 发布取消选中事件
+            _eventBus.Publish(new DeviceSelectionClearedEvent());
+        }
+    
         public async Task SearchOnlineCameras()
         {
          /*   _view.SetSearchButtonEnabled(false);*/
@@ -193,12 +244,7 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             }
             
         }
-        private void OnDeviceConfigSaved(string deviceId, Dictionary<string, string> config)
-        {
-               /*  DeviceSerive.SaveDeviceConfig(deviceId, config);
-                 var dev=DeviceService.GetDevice(deviceId);
-                 _view.RefreshDeviceStatusIcon();*/
-        }
+       
         private void OnCopyDeviceRequest(string sourceDevId)
         {
             if (!_view.ShowConfirmDialog("确认复制该设备？")) return;
@@ -212,7 +258,6 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             {
                 _view.ShowMessage(res.Message);
             }
-
         }
         private void OnToggleDeviceEnableRequest(string deviceId)
         {
@@ -225,6 +270,24 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             {
                 _view.ShowMessage(res.Message);
             }
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _view.ConfigDeviceSelected -= OnConfigDeviceSelected;
+                _view.NoDeviceSelected -= OnNoDeviceSelected;
+                _view.OnlineDeviceSelected -= OnOnlineDeviceSelected;
+
+                _view.AddDeviceRequest -= OnAddDeviceRequest;
+                _view.RemoveDeviceRequest -= OnRemoveDeviceRequest;
+                _view.CopyDeviceRequest -= OnCopyDeviceRequest;
+                _view.ToggleDeviceEnableRequest -= OnToggleDeviceEnableRequest;
+                _view.ViewLoaded -= OnViewLoaded;
+                _view.AddToConfigRequsted -= () => AddSelectedCameraToConfig();
+                _view.RefreshSearchRequested -= async () => await SearchOnlineCameras();
+            }
+            base.Dispose(disposing);
         }
     }
 }

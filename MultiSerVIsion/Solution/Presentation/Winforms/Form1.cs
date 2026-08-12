@@ -1,9 +1,13 @@
 ﻿using MultiSerVIsion.Solution.Application;
 using MultiSerVIsion.Solution.Application.Services;
+using MultiSerVIsion.Solution.Domain.Contexts;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Domain.Services;
+using MultiSerVIsion.Solution.Infrastructure.Events;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Infrastructure.Repository;
+using MultiSerVIsion.Solution.Presentation.Events;
+using MultiSerVIsion.Solution.Presentation.Factor;
 using MultiSerVIsion.Solution.Presentation.Presenter;
 using MultiSerVIsion.Solution.Presentation.Presenter.Factory;
 using MultiSerVIsion.Solution.Presentation.UserControls;
@@ -28,20 +32,53 @@ namespace MultiSerVIsion
     public partial class Form1 : Form
     {
         private readonly Dictionary<string, BaseViewUc> _viewCache = new Dictionary<string, BaseViewUc>();
-        private readonly Dictionary<string, UserControl> _cachedDetailUc = new Dictionary<string, UserControl>();
+        private readonly Dictionary<string, BasePresenter> _presenterCache = new Dictionary<string, BasePresenter>();
         private BaseViewUc _lastActiveView;
 
         private const int DatailPanelWidth = 300;
 
-        private readonly IDeviceDatailView _treeView;
-        private readonly DeviceTressPresenter _treePresent;
-
-        public Form1()
+        private readonly Solution.Domain.Contexts.IDeviceContext _deviceContext;
+        private readonly IEventBus _eventBus;
+        private readonly IDeviceInfoPresenterFactory _deviceinfoPresenterFactory;
+        private readonly IDeviceTreePresenterFactory _deviceTreePresenterFactory;
+        private readonly IDeviceAppService _deviceAppService;
+        private readonly ICameraAppService _cameraAppService;
+        private readonly IVisonPresenterFactor _visionPresenterFactory;
+       
+      /* private Form1()
         {
             InitializeComponent();
             InitLayoutSplit();
             InitPresent();
-            
+        }*/
+        public Form1(
+            IEventBus eventBus,
+            IVisonPresenterFactor visionPresenterFactory,
+            IDeviceAppService deviceAppService,
+            ICameraAppService cameraAppService,
+            IDeviceInfoPresenterFactory devicePresenterFactory,
+            IDeviceTreePresenterFactory deviceTreePresenterFactory,
+             Solution.Domain.Contexts.IDeviceContext deviceContext)
+        {
+          
+            _eventBus = eventBus;
+            _deviceinfoPresenterFactory = devicePresenterFactory;
+            _deviceTreePresenterFactory = deviceTreePresenterFactory;
+            _deviceAppService= deviceAppService;
+            _cameraAppService= cameraAppService;
+            _visionPresenterFactory=visionPresenterFactory;
+            _deviceContext= deviceContext;
+
+            _eventBus.Subscribe<ConfigDeviceSelectedEvent>(OnDeviceSelectedSwitchTab);
+
+            InitializeComponent();
+            InitLayoutSplit();
+            InitPresent();
+        }
+        private void OnDeviceSelectedSwitchTab(ConfigDeviceSelectedEvent e)
+        {
+            // 只做UI切换，不包含任何业务逻辑
+            tabControl1.SelectedTab = tabPageVision;
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -53,31 +90,22 @@ namespace MultiSerVIsion
 
         private void InitPresent()
         {
-            IDeviceRepository repo = new DeviceRepository();
-            IDeviceDomainSerivce domainSve = new DeviceDomainService();
-            IDeviceManager manager = new DeviceManager(repo);
-            IDeviceAppService appSvc = new DeviceAppService(domainSve,manager);
-
+           
             IDeviceTreeView treeView = new DeviceTreeUC();
             IDeviceDatailView detailView = new CameraDateilUC();
 
-            ICameraHardwareDriver hardwareDriver=new HikCameraHardwareDriver();
-            ICameraDeviceService cameraDevice=new CameraDomainService(manager,hardwareDriver);
-            ICameraAppService cameraAppDevice = new CameraApplicationoService(cameraDevice, manager);
-
-            IDeviceInfoParamView deviceInfo=new DeviceInfoUC();
+            IDeviceInfoParamView deviceInfo = new DeviceInfoUC();
+            IVisionView visionView = new UCVisionView();
+        
+            var Treepresenter = _deviceTreePresenterFactory.Create(treeView);
+            var infopresenter = _deviceinfoPresenterFactory.Create(deviceInfo);
           
 
-            var infoPresent = new DeviceInfoPresenter(deviceInfo, manager, cameraAppDevice);
-
-            var treePresenter = new DeviceTressPresenter(treeView, appSvc,cameraAppDevice);
-            var detailPresenter = new DeviceDetailPresenter(appSvc);
-/*
-            split_outer.Panel1.Controls.Add(treeView as DeviceTreeUC);*/
-           split_Devicetree.Panel1.Controls.Add(treeView as DeviceTreeUC);
+            split_Devicetree.Panel1.Controls.Add(treeView as DeviceTreeUC);
             split_Devicetree.Panel2.Controls.Add(deviceInfo as DeviceInfoUC);
+        }
 
-            treeView.ConfigDeviceSelected += deviceId =>
+       /*     treeView.ConfigDeviceSelected += deviceId =>
             {
                 infoPresent.LoadConfigCamera(deviceId);
             };
@@ -92,7 +120,7 @@ namespace MultiSerVIsion
                 infoPresent.Clear();
             };
 
-            detailPresenter.OnCreaateDetailUc += (System.Windows.Forms.UserControl uc) =>
+           detailPresenter.OnCreaateDetailUc += (System.Windows.Forms.UserControl uc) =>
             {
                 split_inter.Panel2.SuspendLayout();
                
@@ -127,7 +155,7 @@ namespace MultiSerVIsion
                 split_inter.SplitterDistance = split_inter.Width;
             };
            
-        }
+        }*/
        
         private void InitLayoutSplit()
         {
@@ -147,7 +175,7 @@ namespace MultiSerVIsion
         {
             string tabKey = targetTab.Name;
             if (_viewCache.ContainsKey(tabKey)) return;
-
+                                        
             BaseViewUc view = null;
             switch (tabKey)
             {
@@ -156,9 +184,11 @@ namespace MultiSerVIsion
                     break;
                 case "tabPageVision":
                     view=new UCVisionView();
-                    var vision=view as UCVisionView;
-                    vision.ExposureValueChanged += Vision_ExposureChanged;
-                    
+                    var vision = view as IVisionView;
+                    var visionPresenter = _visionPresenterFactory.Create(vision);
+                    visionPresenter.Init();
+                    _presenterCache[tabKey] = visionPresenter;
+
                     break;
             }
             if(view==null) return;

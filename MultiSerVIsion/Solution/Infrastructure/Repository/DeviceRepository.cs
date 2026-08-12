@@ -72,11 +72,11 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
                 File.Move(tempPath, _storagePath);
         }
 
-        public DeviceEntity GetById(string devId)
+       /* public DeviceEntity GetById(string devId)
         {
             return LoadAll().FirstOrDefault(d => d.DeviceId == devId);
         }
-
+*/
         public void Add(DeviceEntity device)
         {
             var all = LoadAll();
