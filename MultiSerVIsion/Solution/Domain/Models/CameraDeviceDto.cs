@@ -14,5 +14,7 @@ namespace MultiSerVIsion.Solution.Domain.Models
         public string Model { get; set; } = string.Empty;
         public string InterfaceType { get; set; } = string.Empty;
         public string MacAddress { get; set; } = string.Empty;
+        public string DeviceName { get; set; } = string.Empty;
+        public string Manufacturer { get; set; } = string.Empty;
     }
 }

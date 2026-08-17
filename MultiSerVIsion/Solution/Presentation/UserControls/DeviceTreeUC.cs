@@ -211,42 +211,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 }
             }
 
-          /*  if (e.Button == MouseButtons.Left)
-                {
-                    _rightClickNode = null;
-                    _rightClickGroupNode= null;
-
-                    string nodeTage=e.Node.Tag?.ToString() ?? string.Empty;
-                    if (nodeTage != null && nodeTage.StartsWith("Group_"))
-                    {
-                        RaiseDeviceUnSelect();
-                    }
-                    else if (!string.IsNullOrEmpty(nodeTage))
-                    {
-
-                        _rightClickGroupNode = e.Node.Parent;
-                        _rightClickNode = e.Node;
-                        RaiseDeviceSelected(nodeTage);
-                    }
-                    else
-                    {
-                        RaiseDeviceUnSelect();
-                    }
-                } 
-                else if(e.Button == MouseButtons.Right)
-                {
-                    string tag = e.Node.Tag?.ToString() ?? string.Empty;
-                    if (tag.StartsWith("Group_"))
-                    {
-                        _rightClickGroupNode=e.Node;
-                        _rightClickNode=null;
-                    }
-                    else
-                    {
-                        _rightClickNode = e.Node;
-                        _rightClickGroupNode = e.Node.Parent;
-                    }
-                }*/
+         
         }
         private void ContextMenuStrip_Device_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -339,6 +304,19 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 }
             }
 
+            // 兜底：分组 Tag 不匹配（如历史 JSON 中 GroupTage 为空/非标准值）时，
+            // 默认归入相机分组，避免设备静默丢失
+            if (GroupNode == null)
+            {
+                foreach (TreeNode g in treeView_Device.Nodes)
+                {
+                    if (g.Tag?.ToString() == "Group_Camera")
+                    {
+                        GroupNode = g;
+                        break;
+                    }
+                }
+            }
             if(GroupNode == null) return;
 
             if (GroupNode.Nodes.Cast<TreeNode>().Any(n => n.Tag?.ToString() == devId))

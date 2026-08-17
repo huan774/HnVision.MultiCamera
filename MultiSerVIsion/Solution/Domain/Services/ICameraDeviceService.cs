@@ -1,9 +1,8 @@
-﻿using MultiSerVIsion.Solution.Application.Dtos;
+﻿
 using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
 using MultiSerVIsion.Solution.Domain.Models;
-using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
 using System.Collections.Generic;

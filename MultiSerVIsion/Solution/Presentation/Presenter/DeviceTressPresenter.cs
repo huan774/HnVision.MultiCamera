@@ -148,16 +148,7 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             // 添加后刷新已组态设备树
             LoadAllDeviceOnStart();
         }
-     /*   public void LoadConfigDevices()
-        {
-            var result = _appService.GetAllDevices();
-            if (!result.Success)
-            {
-                _view.ShowMessage($"加载设备失败：{result.Message}");
-                return;
-            }
-            _view.RefreshDeviceStatusIcon();
-        }*/
+    
 
         private void LoadAllDeviceOnStart()
         {
@@ -170,10 +161,9 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
                     _view.ShowMessage("设备数据加载失败：" + result.Message);
                     return;
                 }
-                foreach (var device in result.Data)
-                {
-                   _view.AddTreeNode(device.GroupTage, device.DeviceId, device.DeviceName);
-                }
+                // 按设备类型映射到对应分组（Group_Camera/Group_Motion）重建组态设备树，
+                // 避免直接使用 GroupTage 与树分组 Tag 不匹配导致设备静默丢失
+                _view.RefreshConfigDeviceTree(result.Data);
                 _view.RefreshDeviceStatusIcon();
             }
             catch (Exception ex)
@@ -251,7 +241,7 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             var res = _appService.CopyDevice(sourceDevId);
             if (res.Success && res.Data != null)
             {
-                _view.AddTreeNode(res.GroupTag, res.Data.DeviceId, res.Data.DeviceName);
+                _view.AddTreeNode(res.Data.GroupTage, res.Data.DeviceId, res.Data.DeviceName);
                 _view.RefreshDeviceStatusIcon();
             }
             else

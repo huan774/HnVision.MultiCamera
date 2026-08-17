@@ -11,7 +11,6 @@ using MultiSerVIsion.Solution.Presentation.Events;
 using MultiSerVIsion.Solution.Shared.Extensions;
 using MultiSerVIsion.Solution.Shared.Helpers;
 using MultiSerVIsion.Solution.Shared.Models;
-using MvCamCtrl.NET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,21 +20,23 @@ using static MultiSerVIsion.Solution.Infrastructure.HiKHardware.HikCameraHardwar
 
 namespace MultiSerVIsion.Solution.Application.Services
 {
+    /// <summary>
+    /// 相机应用服务：编排相机的扫描、组态、连接、断开、采流等用例。
+    /// 【职责】调用领域服务做业务校验、调用硬件驱动执行实际操作、发布领域事件。
+    /// 【原则】不直接依赖 SDK，仅通过 ICameraHardwareDriver 接口与硬件交互，驱动内部按序列号管理多相机。
+    /// </summary>
     public class CameraApplicationoService : ICameraAppService
     {
-        private readonly ICameraDeviceService _cameraDomainService;
-        private readonly IDeviceManager _deviceManager;
-        private readonly ICameraHardwareDriver _driver;       // 硬件驱动
-        private readonly IEventBus _eventBus;
+        private readonly ICameraDeviceService _cameraDomainService;   // 相机领域服务（业务规则校验）
+        private readonly IDeviceManager _deviceManager;               // 设备内存管理器（组态设备）
+        private readonly ICameraHardwareDriver _driver;               // 硬件驱动（内部按序列号管理多相机）
+        private readonly IEventBus _eventBus;                         // 全局事件总线
 
-        private readonly Dictionary<string, HikCameraHardwareDriver> _driverMap = new Dictionary<string, HikCameraHardwareDriver>();
-        private readonly object _lockObj = new object();
         public CameraApplicationoService(
             ICameraDeviceService cameraDomainService,
             IDeviceManager cameraDeviceManager,
             ICameraHardwareDriver driver,
-            IEventBus eventBus
-            )
+            IEventBus eventBus)
         {
             _cameraDomainService = cameraDomainService;
             _deviceManager = cameraDeviceManager;
@@ -43,14 +44,18 @@ namespace MultiSerVIsion.Solution.Application.Services
             _eventBus = eventBus;
         }
 
+        /// <summary>相机帧到达事件：驱动采集到统一帧后向上层透传</summary>
         public event EventHandler<CameraFrameEventArgs> FrameReceived;
+
+        /// <summary>
+        /// 搜索所有在线相机（驱动内部已转换为统一 DTO 列表）
+        /// </summary>
         public async Task<OperationResult<List<CameraDeviceDto>>> SearchOnlineCamera()
         {
             try
             {
-                var list = await _driver.ScanAllCameraAsync();
-                var dto= list.ToCameraDeviceDtoList(); // 扩展方法：扫描结果转换为Dto列表
-                return OperationResult<List<CameraDeviceDto>>.Succes(dto);
+                // 直接调用驱动扫描，ScanAsync 返回的已是 OperationResult<List<CameraDeviceDto>>
+                return await _driver.ScanAsync();
             }
             catch (Exception ex)
             {
@@ -58,6 +63,11 @@ namespace MultiSerVIsion.Solution.Application.Services
                 return OperationResult<List<CameraDeviceDto>>.Fail($"搜索失败：{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 将扫描到的在线相机一键导入组态（落盘 JSON）
+        /// </summary>
+        /// <param name="scannedCamera">扫描得到的相机 DTO</param>
         public OperationResult<DeviceEntity> AddScannedCameraToConfig(CameraDeviceDto scannedCamera)
         {
             try
@@ -69,7 +79,7 @@ namespace MultiSerVIsion.Solution.Application.Services
                 if (exist != null)
                     return OperationResult<DeviceEntity>.Fail("该相机已在组态中，请勿重复添加");
 
-                // 2. 扫描Dto → 持久化实体（调用映射扩展方法）
+                // 2. 扫描 DTO → 持久化实体（调用映射扩展方法）
                 var cameraEntity = scannedCamera.ToNewCameraEntity();
 
                 // 3. 加入内存管理器（内部自动执行校验+去重）
@@ -84,293 +94,230 @@ namespace MultiSerVIsion.Solution.Application.Services
                 LogHelper.Error("添加扫描相机异常", ex);
                 return OperationResult<DeviceEntity>.Fail($"添加失败：{ex.Message}");
             }
-
         }
 
+        /// <summary>
+        /// 测试连接（短连接，登录后立即释放，不占用句柄）
+        /// 【用途】保存组态前验证参数可达性，验证完即释放，不建立持久连接。
+        /// </summary>
+        /// <param name="connectConfig">连接参数</param>
+        public async Task<OperationResult> TestConnectAsync(CameraConnectConfig connectConfig)
+        {
+            if (connectConfig == null)
+                return OperationResult.Fail("连接参数不能为空");
+
+            try
+            {
+                // 直接委托驱动执行短连接测试，驱动内部登录成功后立即释放资源
+                return await _driver.TestConnectAsync(connectConfig);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("测试连接异常", ex);
+                return OperationResult.Fail($"测试连接异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 连接已组态相机（长连接，句柄由驱动内部按序列号缓存）
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
         public async Task<OperationResult> ConnectCamera(string deviceId)
         {
-            // 1. 基础校验：取设备实体
+            // 1. 取设备实体
             var device = _deviceManager.GetDeviceById(deviceId) as CameraEntity;
             if (device == null)
                 return OperationResult.Fail("设备不存在");
 
-            // 2. 业务规则校验：交给领域服务判断能不能连
+            // 2. 业务规则校验：交给领域服务判断能否连接
             var validateResult = _cameraDomainService.ValidateCanConnect(device);
             if (!validateResult.Success)
                 return validateResult;
 
-            // 3. 组装硬件参数，调用驱动执行连接
+            // 3. 组装硬件连接参数
             var connectConfig = new CameraConnectConfig
             {
                 SerialNumber = device.CameraAllConfig.ConnectConfig.SerialNumber,
                 IpAddress = device.IpAddress,
                 InterfaceType = device.CameraAllConfig.ConnectConfig.InterfaceType
             };
-            var connectResult = await _driver.LoginAsync(connectConfig);
-            if (connectResult.errorCode!=0)
-                return OperationResult.Fail($"错误码{connectResult.errorCode}");
 
-            // 4. 更新领域对象状态：交给领域服务处理状态流转
-            _cameraDomainService.ApplyConnectionStatus(device, true);
+            try
+            {
+                // 4. 调用驱动正式连接
+                var connectResult = await _driver.ConnectAsync(connectConfig);
+                if (!connectResult.Success)
+                    return connectResult;
 
-            // 5. 发布全局事件
-            _eventBus.Publish(new DeviceConnectionChangedEveent(deviceId, true));
+                // 5. 更新领域对象状态
+                _cameraDomainService.ApplyConnectionStatus(device, true);
 
-            return OperationResult.Succes();
+                // 6. 发布全局连接事件
+                _eventBus.Publish(new DeviceConnectionChangedEveent(deviceId, true));
+
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("连接相机异常", ex);
+                return OperationResult.Fail($"连接异常：{ex.Message}");
+            }
         }
 
-        // 在线设备直连同理：先校验，再调驱动，再更新上下文/状态
+        /// <summary>
+        /// 在线扫描设备直连（无实体，跳过实体校验，直接调用驱动正式连接）
+        /// </summary>
+        /// <param name="config">连接参数</param>
         public async Task<OperationResult> ConnectOnlineCamera(CameraConnectConfig config)
         {
-            // 在线设备没有实体，跳过实体校验，直接调驱动
-            var result = await _driver.LoginAsync(config);
-            if (result.errorCode==0)
+            if (config == null)
+                return OperationResult.Fail("连接参数不能为空");
+
+            try
             {
-                _eventBus.Publish(new DeviceConnectionChangedEveent(config.SerialNumber, true));
+                var result = await _driver.ConnectAsync(config);
+                if (result.Success)
+                {
+                    _eventBus.Publish(new DeviceConnectionChangedEveent(config.SerialNumber, true));
+                }
+                return result;
             }
-            return OperationResult.Succes();
+            catch (Exception ex)
+            {
+                LogHelper.Error("在线设备连接异常", ex);
+                return OperationResult.Fail($"连接异常：{ex.Message}");
+            }
         }
-        /* public async Task<OperationResult> TestConnectAsync(CameraConnectConfig connectConfig)
-         {
-             // 1. 前置参数校验
-             if (connectConfig == null)
-                 return OperationResult.Fail("连接参数不能为空");
 
-             bool hasSerial = !string.IsNullOrWhiteSpace(connectConfig.SerialNumber);
-             bool hasIp = !string.IsNullOrWhiteSpace(connectConfig.IpAddress);
-             if (!hasSerial && !hasIp)
-                 return OperationResult.Fail("序列号和IP不能同时为空");
-
-             HikCameraHardwareDriver tempDriver = null;
-             MyCamera cameraObj = null;
-
-             try
-             {
-                 // 2. 创建临时驱动实例，仅用于本次测试
-                 tempDriver = new HikCameraHardwareDriver();
-
-                 // 3. 执行登录测试
-                 var (errorCode, cam) = await tempDriver.LoginAsync(connectConfig);
-                 if (errorCode != 0)
-                 {
-                     return OperationResult.Fail($"连接测试失败，错误码：{errorCode}");
-                 }
-
-                 cameraObj = cam;
-                 // 登录成功即代表连通性正常
-                 return OperationResult.Succes();
-             }
-             catch (Exception ex)
-             {
-                 return OperationResult.Fail($"连接测试异常：{ex.Message}");
-             }
-             finally
-             {
-                 // 4. 无论成功失败，必须完整释放资源，绝对不残留连接
-                 if (cameraObj != null && tempDriver != null)
-                 {
-                     try
-                     {
-                         tempDriver.Logout(cameraObj);
-                     }
-                     catch
-                     {
-                         // 忽略释放阶段的异常，保证资源回收不中断
-                     }
-                 }
-             }
-         }
-         public async Task<OperationResult> ConnectCamera(string deviceId)
-         {
-             var camera = GetCameraEntity(deviceId);
-             if (camera == null)
-                 return OperationResult.Fail("设备不存在或不是相机类型");
-
-             // 前置状态校验：仅未连接状态可执行连接
-             if (camera.DetailStatus != CameraStatus.Disconnected)
-                 return OperationResult.Fail($"当前状态[{camera.DetailStatus}]，无法执行连接");
-
-             try
-             {
-                 // 创建该相机专属的驱动实例
-                 var driver = new HikCameraHardwareDriver();
-
-                 // 调用底层异步登录
-                 var (errorCode, cameraObj) = await driver.LoginAsync(camera.CameraAllConfig.ConnectConfig);
-                 if (errorCode != 0)
-                 {
-                     return OperationResult.Fail($"相机连接失败，错误码：{errorCode}");
-                 }
-                 else
-                 {
-                     _driverMap[deviceId] = driver;
-                 }
-
-                 // 订阅该相机的帧事件
-                 driver.FrameReceived += (sender, e) =>
-                 {
-                     // 包装为带设备ID的事件参数，向上透传
-                     FrameReceived?.Invoke(this, new CameraFrameEventArgs(
-                         deviceId, e.Frame, e.Width, e.Height, e.FrameId, e.Timestamp));
-                 };
-
-                 // 写入实体：缓存驱动实例、相机句柄、更新状态
-                 lock (_lockObj)
-                 {
-                     _driverMap[deviceId] = driver;
-                     camera.CameraHandle = cameraObj;
-                     camera.ConnectionStatus = DeviceConnectionStatue.Connected;
-                     camera.DetailStatus = CameraStatus.Connected;
-                 }
-
-                 return OperationResult.Succes();
-             }
-             catch (Exception ex)
-             {
-                 // 异常兜底：强制回滚状态，避免半连接
-                 lock (_lockObj)
-                 {
-                     if (_driverMap.ContainsKey(deviceId))
-                     {
-                         _driverMap.Remove(deviceId);
-                     }
-                     camera.CameraHandle = null;
-                     camera.ConnectionStatus = DeviceConnectionStatue.Disconnected;
-                     camera.DetailStatus = CameraStatus.Disconnected;
-                 }
-                 return OperationResult.Fail($"相机连接异常：{ex.Message}");
-             }
-         }*/
+        /// <summary>获取相机实体，非相机类型返回 null</summary>
         private CameraEntity GetCameraEntity(string deviceId)
         {
             if (string.IsNullOrWhiteSpace(deviceId)) return null;
             return _deviceManager.GetDeviceById(deviceId) as CameraEntity;
         }
+
+        /// <summary>
+        /// 断开相机（驱动内部会先停流、释放缓冲、关闭设备）
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
         public OperationResult DisconnectCamera(string deviceId)
         {
             var camera = GetCameraEntity(deviceId);
             if (camera == null)
                 return OperationResult.Fail("设备不存在或不是相机类型");
 
-            // 幂等处理：已断开直接返回
-            if (camera.CameraHandle == null || !_driverMap.ContainsKey(deviceId))
-            {
-                camera.ConnectionStatus = DeviceConnectionStatue.Disconnected;
-                camera.DetailStatus = CameraStatus.Disconnected;
-                return OperationResult.Succes();
-            }
+            var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("设备缺少序列号，无法断开");
 
             try
             {
-                var driver = _driverMap[deviceId];
+                // 同步等待异步断开结果（驱动内部为纯同步 SDK 操作，无死锁风险）
+                var result = _driver.DisconnectAsync(serialNumber).GetAwaiter().GetResult();
 
-                // 采流中先强制停流，再断开（状态+硬件双重兜底）
-                if (camera.DetailStatus == CameraStatus.Streaming)
-                {
-                    StopStreamInternal(deviceId, driver, camera);
-                }
+                // 更新领域状态（成功与否都置为断开，避免半连接残留）
+                _cameraDomainService.ApplyConnectionStatus(camera, false);
 
-                // 底层完整登出：关流→关设备→销毁句柄
-                int logoutCode = driver.Logout(camera.CameraHandle);
-
-                // 清理资源与状态
-                lock (_lockObj)
-                {
-                    _driverMap.Remove(deviceId);
-                    camera.CameraHandle = null;
-                    camera.ConnectionStatus = DeviceConnectionStatue.Disconnected;
-                    camera.DetailStatus = CameraStatus.Idle;
-                }
-
-                return logoutCode == 0
+                return result.Success
                     ? OperationResult.Succes()
-                    : OperationResult.Fail($"相机断开异常，错误码：{logoutCode}");
+                    : OperationResult.Fail($"断开失败：{result.Message}");
             }
             catch (Exception ex)
             {
-                // 异常兜底：强制清理状态，避免卡死
-                lock (_lockObj)
-                {
-                    _driverMap.Remove(deviceId);
-                    camera.CameraHandle = null;
-                    camera.ConnectionStatus = DeviceConnectionStatue.Disconnected;
-                    camera.DetailStatus = CameraStatus.Disconnected;
-                }
+                LogHelper.Error("断开相机异常", ex);
+                _cameraDomainService.ApplyConnectionStatus(camera, false);
                 return OperationResult.Fail($"相机断开异常：{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 开启连续采流（主动取流模式），帧通过 FrameReceived 事件透传
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
         public async Task<OperationResult> StartStream(string deviceId)
         {
             var camera = GetCameraEntity(deviceId);
             if (camera == null)
                 return OperationResult.Fail("设备不存在或不是相机类型");
 
-            if (camera.CameraHandle == null || !_driverMap.TryGetValue(deviceId, out var driver))
-                return OperationResult.Fail("设备未连接，无法开启采流");
+            // 业务校验：交给领域服务判断能否采流
+            var validateResult = _cameraDomainService.ValidateCanStartStream(camera);
+            if (!validateResult.Success)
+                return validateResult;
 
-            // 幂等：已在采流直接返回成功
-            if (camera.DetailStatus == CameraStatus.Streaming)
-                return OperationResult.Succes();
+            var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("设备缺少序列号，无法开启采流");
 
             try
             {
-                int ret = await Task.Run(() => driver.OpenStream(camera.CameraHandle));
-                if (ret != 0)
-                    return OperationResult.Fail($"开启采流失败，错误码：{ret}");
+                // 帧回调：将驱动统一帧包装为带设备 ID 的事件参数，向上层透传
+                Action<CameraFrame> frameCallback = frame =>
+                {
+                    FrameReceived?.Invoke(this, new CameraFrameEventArgs(deviceId, frame));
+                };
+
+                // 调用驱动开启采流
+                var result = await _driver.StartStreamAsync(serialNumber, frameCallback);
+                if (!result.Success)
+                    return result;
 
                 camera.DetailStatus = CameraStatus.Streaming;
                 return OperationResult.Succes();
             }
             catch (Exception ex)
             {
+                LogHelper.Error("开启采流异常", ex);
                 return OperationResult.Fail($"开启采流异常：{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 停止采流，回到已连接状态
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
         public OperationResult StopStream(string deviceId)
         {
             var camera = GetCameraEntity(deviceId);
             if (camera == null)
                 return OperationResult.Fail("设备不存在或不是相机类型");
 
-            if (!_driverMap.TryGetValue(deviceId, out var driver))
-                return OperationResult.Fail("设备未连接");
+            var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("设备缺少序列号，无法停止采流");
 
-            return StopStreamInternal(deviceId, driver, camera);
-        }
-        private OperationResult StopStreamInternal(string deviceId, HikCameraHardwareDriver driver, CameraEntity camera)
-        {
             try
             {
-                int ret = driver.CloseStream(camera.CameraHandle);
+                // 同步等待异步停流结果
+                var result = _driver.StopStreamAsync(serialNumber).GetAwaiter().GetResult();
+
+                // 停流成功回到已连接状态
                 camera.DetailStatus = CameraStatus.Connected;
 
-                return ret == 0
+                return result.Success
                     ? OperationResult.Succes()
-                    : OperationResult.Fail($"停止采流失败，错误码：{ret}");
+                    : OperationResult.Fail($"停止采流失败：{result.Message}");
             }
             catch (Exception ex)
             {
-                // 异常也强制更新状态，避免UI卡死
+                LogHelper.Error("停止采流异常", ex);
                 camera.DetailStatus = CameraStatus.Connected;
                 return OperationResult.Fail($"停止采流异常：{ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 释放驱动资源（驱动内部会停流、断开所有相机并反初始化 SDK）
+        /// </summary>
         public void ReleaseAll()
         {
-            lock (_lockObj)
+            try
             {
-                foreach (var deviceId in _driverMap.Keys.ToList())
-                {
-                    try
-                    {
-                        DisconnectCamera(deviceId);
-                    }
-                    catch
-                    {
-                        // 忽略单台释放异常，保证全部执行
-                    }
-                }
-                _driverMap.Clear();
+                _driver.Dispose();
+            }
+            catch
+            {
+                // 忽略释放异常，保证清理不中断
             }
         }
     }

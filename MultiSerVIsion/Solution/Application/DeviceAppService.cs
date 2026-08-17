@@ -39,7 +39,7 @@ namespace MultiSerVIsion.Solution.Application
                 _manager.AddDevice(newDevice);
 
                 string groupTag = _manager.GetGroupTag(soureDeviceId);
-                return OperationResult<DeviceEntity>.Succes(newDevice, groupTag);
+                return OperationResult<DeviceEntity>.Succes(newDevice);
             }
             catch (DeviceNotFoundException ex)
             {
@@ -84,7 +84,7 @@ namespace MultiSerVIsion.Solution.Application
                     return OperationResult<DeviceEntity>.Fail(validate.Message);
                 _manager.AddDevice(entity);
               
-                return OperationResult<DeviceEntity>.Succes(entity, entity.GroupTage);
+                return OperationResult<DeviceEntity>.Succes(entity);
             
             }catch(DeviceDuplicateIdException ex)
             {
@@ -199,7 +199,7 @@ namespace MultiSerVIsion.Solution.Application
                 target.IsEnable=input.IsEnable;
 
               
-                return OperationResult<DeviceEntity>.Succes(target, target.GroupTage);
+                return OperationResult<DeviceEntity>.Succes(target);
             }
             catch (DeviceNotFoundException ex)
             {
@@ -236,6 +236,7 @@ namespace MultiSerVIsion.Solution.Application
         {
             try
             {
+                // 将内存中所有设备全量落盘（职责：协调 Manager 调用仓储持久化）
                 _manager.SaveToStorage();
                 return OperationResult.Succes();
             }
@@ -249,6 +250,7 @@ namespace MultiSerVIsion.Solution.Application
         {
             try
             {
+                // 启动时从 JSON 全量加载设备到内存（职责：协调 Manager 调用仓储加载）
                 _manager.LoadFromStorage();
                 return OperationResult.Succes();
             }catch(Exception ex)

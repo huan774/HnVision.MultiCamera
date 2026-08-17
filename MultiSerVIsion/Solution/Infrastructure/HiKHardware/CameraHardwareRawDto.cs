@@ -19,5 +19,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         public string MacAddress { get; set; } = string.Empty;
         /// <summary>SDK内部设备唯一标识（底层专用，上层丢弃）</summary>
         public string SdkDeviceKey { get; set; } = string.Empty;
+        public string DeviceName { get; set; } = string.Empty;
+        public string Manufacturer { get; set; } = string.Empty;
     }
 }

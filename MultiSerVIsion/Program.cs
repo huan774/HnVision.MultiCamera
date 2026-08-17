@@ -57,7 +57,7 @@ namespace MultiSerVIsion
             // ====================== 相机业务层 ======================
             // 硬件驱动注册为瞬时：每个相机连接使用独立实例，避免句柄/线程冲突
             // 驱动内部的静态扫描缓存依然全局共享，不影响扫描结果复用
-            services.AddTransient<ICameraHardwareDriver, HikCameraHardwareDriver>();
+            services.AddSingleton<ICameraHardwareDriver, HikCameraHardwareDriver>();
             services.AddSingleton<ICameraDeviceService, CameraDomainService>();
             services.AddSingleton<ICameraAppService, CameraApplicationoService>();
 

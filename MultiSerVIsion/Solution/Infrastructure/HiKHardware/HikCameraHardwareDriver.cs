@@ -1,163 +1,99 @@
-﻿using MultiSerVIsion.Solution.Application.Dtos;
-using MultiSerVIsion.Solution.Domain.Entities.Configs;
+﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
+using MultiSerVIsion.Solution.Domain.Models;
 using MultiSerVIsion.Solution.Domain.Repositories;
-using MultiSerVIsion.Solution.Presentation.UserControls;
+using MultiSerVIsion.Solution.Shared.Models;
 using MvCamCtrl.NET;
 using MvCameraControl;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
-using System.Net;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media.Media3D;
-using static MvCamCtrl.NET.MyCamera;
 
 namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
 {
+    /// <summary>
+    /// 海康工业相机硬件驱动封装
+    /// 【取流模式】统一采用主动取流（StartGrabbing + GetImageBuffer 轮询），
+    /// 不使用 SDK 回调取流，二者互斥。
+    /// 【多相机隔离】每台相机持有独立采集上下文，避免实例级共享字段互相覆盖。
+    /// 【封装原则】SDK 句柄、原始设备信息与错误码全部封装在类内部，按「序列号」索引。
+    /// </summary>
     public class HikCameraHardwareDriver : ICameraHardwareDriver
     {
-        [DllImport("kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
-        private static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);
-
         private const int MV_OK = 0;
 
+        // 内部错误码（仅类内流转，绝不外泄）
         private const int ERR_PARAM_NULL = -1001;
-        private const int ERR_PARAM_EMPTY = -1002;
-        private const int ERR_INVALID_HANDLE = -1003;
         private const int ERR_EXCEPTION = -9999;
 
-        // 采集字段
-        private Thread _grabThread;
-        private volatile bool _isGrabbing = false;
-        private IntPtr _convertBuffer = IntPtr.Zero;
-        private uint _convertBufferSize = 0;
-        private Bitmap _currentBitmap;
-        private PixelFormat _pixelFormat;
-
-        private readonly MyCamera m_MyCamera = new MyCamera();
+        // SDK 初始化状态（线程安全）
+        private readonly object _sdkLock = new object();
         private bool _sdkInited = false;
 
-        public event EventHandler<CameraFrameEventArgs> FrameReceived;
-        
-        MyCamera.MV_CC_DEVICE_INFO_LIST devList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
-        private static readonly Dictionary<string, MV_CC_DEVICE_INFO> _scannedDeviceInfoCache = new Dictionary<string, MV_CC_DEVICE_INFO>();
+        // 扫描枚举结果缓存：序列号 → 设备原始结构体（连接时按序列号取用）
+        private static readonly Dictionary<string, MyCamera.MV_CC_DEVICE_INFO> _scannedDeviceInfoCache
+            = new Dictionary<string, MyCamera.MV_CC_DEVICE_INFO>();
+
         private static readonly object _cacheLock = new object();
+
+        // 多相机采集上下文缓存：序列号 → 独立上下文
+        private readonly ConcurrentDictionary<string, CameraGrabContext> _cameraContexts
+            = new ConcurrentDictionary<string, CameraGrabContext>();
+
+        /// <summary>SDK 错误码映射表（按需补充）</summary>
+        private readonly Dictionary<int, string> _errorCodeMap = new Dictionary<int, string>
+        {
+            { 0, "操作成功" },
+            { -1001, "设备不存在或网络不通" },
+            { -1002, "设备已被占用" },
+            { -1003, "参数错误" },
+            { -1005, "网络包大小不匹配" }
+        };
+
+        /// <summary>
+        /// 单台相机的独立采集上下文
+        /// 【多相机隔离】每台相机各自持有线程、缓冲与状态，互不干扰
+        /// </summary>
+        private sealed class CameraGrabContext
+        {
+            public MyCamera CameraObj;
+            public Action<CameraFrame> FrameCallback;
+            public Thread GrabThread;
+            public volatile bool IsGrabbing;
+
+            // 像素格式转换输出缓冲（非托管）
+            public IntPtr ConvertBuffer = IntPtr.Zero;
+            public uint ConvertBufferSize = 0;
+        }
+
+        /// <summary>
+        /// 相机帧事件参数：携带设备序列号与统一帧数据，供上层订阅使用。
+        /// 【封装原则】仅暴露统一业务帧，不暴露任何 SDK 原生类型。
+        /// </summary>
         public class CameraFrameEventArgs : EventArgs
         {
+            /// <summary>设备序列号</summary>
             public string DeviceId { get; }
-            /// <summary>转换后的标准位图（可直接绑定UI显示）</summary>
-            public Bitmap Frame { get; }
-            /// <summary>图像宽度</summary>
-            public int Width { get; }
-            /// <summary>图像高度</summary>
-            public int Height { get; }
-            /// <summary>帧序号</summary>
-            public ulong FrameId { get; }
-            /// <summary>时间戳（微秒）</summary>
-            public ulong Timestamp { get; }
-            public CameraFrameEventArgs(string devId,Bitmap frame, int width, int height, ulong frameId, ulong timestamp)
+
+            /// <summary>统一帧数据</summary>
+            public CameraFrame Frame { get; }
+
+            /// <summary>
+            /// 构造帧事件参数
+            /// </summary>
+            /// <param name="deviceId">设备序列号</param>
+            /// <param name="frame">统一帧数据</param>
+            public CameraFrameEventArgs(string deviceId, CameraFrame frame)
             {
-                DeviceId = devId;
+                DeviceId = deviceId;
                 Frame = frame;
-                Width = width;
-                Height = height;
-                FrameId = frameId;
-                Timestamp = timestamp;
             }
         }
-        private void InitSdkIfNot()
-        {
-            if (_sdkInited) return;
 
-            var code = MyCamera.MV_CC_Initialize_NET();
-            if (code != MyCamera.MV_OK)
-                throw new HardwareException($"海康SDK初始化失败，错误码{code}", code);
-
-            _sdkInited = true;
-        }
-
-        public void Relese()
-        {
-            if (_sdkInited) return;
-            MyCamera.MV_CC_Finalize_NET();
-            _sdkInited = false;
-        }
-
-        public async Task<List<CameraHardwareRawDto>> ScanAllCameraAsync()
-        {
-            return await Task.Run(() =>
-            {
-                InitSdkIfNot();
-                List<CameraHardwareRawDto> result = new List<CameraHardwareRawDto>();
-
-                lock (_cacheLock)
-                {
-                    _scannedDeviceInfoCache.Clear();
-
-                    int ret = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE |
-                        MyCamera.MV_USB_DEVICE, ref devList);
-
-                    if (ret != MyCamera.MV_OK)
-                        throw new HardwareException($"枚举相机失败，错误码{ret}", ret);
-
-                    for (uint i = 0; i < devList.nDeviceNum; i++)
-                    {
-                        IntPtr pDeviceInfo = devList.pDeviceInfo[i];
-
-                        MyCamera.MV_CC_DEVICE_INFO stDevInfo =
-                        (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(pDeviceInfo,
-                        typeof(MyCamera.MV_CC_DEVICE_INFO));
-
-                     /*   MyCamera cam = new MyCamera();
-                        int re = cam.MV_CC_CreateDevice_NET(ref stDevInfo);*/
-
-                        CameraHardwareRawDto domainInfo = ConverRawToDomainModel(stDevInfo);
-                        result.Add(domainInfo);
-
-                        _scannedDeviceInfoCache[domainInfo.SerialNumber] = stDevInfo;
-
-                    }
-                }
-                return result;
-            });
-        }
-
-        private CameraHardwareRawDto ConverRawToDomainModel(MyCamera.MV_CC_DEVICE_INFO raw)
-        {
-            CameraHardwareRawDto info = new CameraHardwareRawDto();
-
-            if (raw.nTLayerType == MyCamera.MV_GIGE_DEVICE)
-            {
-                MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (
-                    MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(
-                        raw.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
-
-                info.InterfaceType = "GigE";
-                info.IpAddress = gigeInfo.nCurrentIp.ToString();
-                info.SerialNumber = gigeInfo.chSerialNumber;
-                info.Model = gigeInfo.chModelName;
-                
-            }
-            else if (raw.nTLayerType == MyCamera.MV_USB_DEVICE)
-            {
-                MyCamera.MV_USB3_DEVICE_INFO_EX usbInfo = (
-                    MyCamera.MV_USB3_DEVICE_INFO_EX)MyCamera.ByteToStruct(
-                        raw.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO_EX));
-
-                info.InterfaceType = "USB";
-                info.SerialNumber = usbInfo.chSerialNumber.ToString();
-                info.Model = usbInfo.chModelName;
-                info.IpAddress = string.Empty;
-            }
-            return info;
-        }
+        /// <summary>硬件层异常（含 SDK 错误码，仅类内部使用）</summary>
         public class HardwareException : Exception
         {
             public int ErrorCode { get; }
@@ -167,53 +103,415 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             }
         }
 
-        public int Login(CameraConnectConfig connectParam, out MyCamera cameraObj)
+        // ==================== 扫描枚举（已写好，保持不变） ====================
+
+        /// <summary>扫描所有在线相机，转换为业务 DTO</summary>
+        public async Task<OperationResult<List<CameraDeviceDto>>> ScanAsync()
         {
-            cameraObj = null;
-            // 1. 参数前置校验
-            if (connectParam == null) return ERR_PARAM_NULL;
+            try
+            {
+                var rawList = await ScanAllCameraAsync();
+                if (rawList == null || rawList.Count == 0)
+                    return OperationResult<List<CameraDeviceDto>>.Succes(new List<CameraDeviceDto>());
+
+                var result = rawList.Select(raw => new CameraDeviceDto
+                {
+                    SerialNumber = raw.SerialNumber,
+                    IpAddress = raw.IpAddress,
+                    DeviceName = raw.DeviceName,
+                    Model = raw.Model,
+                    Manufacturer = raw.Manufacturer,
+                    InterfaceType = raw.InterfaceType
+                }).ToList();
+
+                return OperationResult<List<CameraDeviceDto>>.Succes(result);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<List<CameraDeviceDto>>.Fail($"扫描相机异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>扫描所有在线相机（返回底层原始 DTO）</summary>
+        public async Task<List<CameraHardwareRawDto>> ScanAllCameraAsync()
+        {
+            return await Task.Run(() =>
+            {
+                InitSdkIfNot();
+                var result = new List<CameraHardwareRawDto>();
+
+                lock (_cacheLock)
+                {
+                    _scannedDeviceInfoCache.Clear();
+
+                    var devList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
+                    int ret = MyCamera.MV_CC_EnumDevices_NET(
+                        MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref devList);
+
+                    if (ret != MV_OK)
+                        throw new HardwareException($"枚举相机失败，错误码{ret}", ret);
+
+                    for (uint i = 0; i < devList.nDeviceNum; i++)
+                    {
+                        IntPtr pDeviceInfo = devList.pDeviceInfo[i];
+                        var stDevInfo = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(
+                            pDeviceInfo, typeof(MyCamera.MV_CC_DEVICE_INFO));
+
+                        var dto = ConverRawToDomainModel(stDevInfo);
+                        result.Add(dto);
+
+                        if (!string.IsNullOrWhiteSpace(dto.SerialNumber))
+                            _scannedDeviceInfoCache[dto.SerialNumber] = stDevInfo;
+                    }
+                }
+                return result;
+            });
+        }
+
+        /// <summary>SDK 原始设备结构体 → 业务原始 DTO</summary>
+        private CameraHardwareRawDto ConverRawToDomainModel(MyCamera.MV_CC_DEVICE_INFO raw)
+        {
+            var info = new CameraHardwareRawDto();
+
+            if (raw.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+            {
+                var gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(
+                    raw.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
+
+                info.InterfaceType = "GigE";
+                info.IpAddress = gigeInfo.nCurrentIp.ToString();
+                info.SerialNumber = gigeInfo.chSerialNumber;
+                info.Model = gigeInfo.chModelName;
+                info.DeviceName = gigeInfo.chUserDefinedName.ToString();
+                info.Manufacturer = gigeInfo.chManufacturerName;
+            }
+            else if (raw.nTLayerType == MyCamera.MV_USB_DEVICE)
+            {
+                var usbInfo = (MyCamera.MV_USB3_DEVICE_INFO_EX)MyCamera.ByteToStruct(
+                    raw.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO_EX));
+
+                info.InterfaceType = "USB";
+                info.SerialNumber = usbInfo.chSerialNumber.ToString();
+                info.Model = usbInfo.chModelName;
+                info.IpAddress = string.Empty;
+                info.DeviceName = usbInfo.chUserDefinedName.ToString();
+                info.Manufacturer = usbInfo.chManufacturerName;
+            }
+            return info;
+        }
+
+        // ==================== 连接 / 断开 ====================
+
+        /// <summary>测试连接：登录成功后立即释放，不占用句柄</summary>
+        public async Task<OperationResult> TestConnectAsync(CameraConnectConfig config)
+        {
+            if (config == null || string.IsNullOrWhiteSpace(config.SerialNumber))
+                return OperationResult.Fail("连接参数无效，缺少序列号");
 
             try
             {
-                MV_CC_DEVICE_INFO deviceInfo;
-             
+                var (errorCode, cameraObj) = await LoginAsync(config);
+                if (errorCode != MV_OK || cameraObj == null)
+                    return OperationResult.Fail(GetErrorMessage(errorCode));
 
-                // 1. 优先：从扫描缓存取完整结构体（官方标准路径，成功率100%）
-                if (!string.IsNullOrWhiteSpace(connectParam.SerialNumber))
+                try
                 {
-                    lock (_cacheLock)
+                    cameraObj.MV_CC_CloseDevice_NET();
+                    cameraObj.MV_CC_DestroyDevice_NET();
+                }
+                catch
+                {
+                    // 释放阶段忽略异常
+                }
+
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail($"测试连接异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>正式连接：登录并缓存句柄</summary>
+        public async Task<OperationResult> ConnectAsync(CameraConnectConfig config)
+        {
+            if (config == null || string.IsNullOrWhiteSpace(config.SerialNumber))
+                return OperationResult.Fail("连接参数无效，缺少序列号");
+
+            if (_cameraContexts.ContainsKey(config.SerialNumber))
+                return OperationResult.Succes("设备已连接");
+
+            try
+            {
+                var (errorCode, cameraObj) = await LoginAsync(config);
+                if (errorCode != MV_OK || cameraObj == null)
+                    return OperationResult.Fail($"连接失败：{GetErrorMessage(errorCode)}");
+
+                _cameraContexts[config.SerialNumber] = new CameraGrabContext { CameraObj = cameraObj };
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail($"连接异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>断开：停流 → 释放缓冲 → 关闭并销毁设备</summary>
+        public async Task<OperationResult> DisconnectAsync(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("序列号不能为空");
+
+            if (!_cameraContexts.TryRemove(serialNumber, out var ctx))
+                return OperationResult.Succes("设备未连接，无需断开");
+
+            try
+            {
+                // 1. 先停止采流（幂等）
+                if (ctx.IsGrabbing)
+                {
+                    ctx.IsGrabbing = false;
+                    JoinGrabThread(ctx);
+                    ctx.CameraObj.MV_CC_StopGrabbing_NET();
+                }
+
+                // 2. 释放取流缓冲
+                ReleaseGrabBuffer(ctx);
+
+                // 3. 关闭并销毁设备
+                ctx.CameraObj.MV_CC_CloseDevice_NET();
+                ctx.CameraObj.MV_CC_DestroyDevice_NET();
+
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                // 兜底销毁，避免句柄泄漏
+                TryDestroyDevice(ctx.CameraObj);
+                return OperationResult.Fail($"断开异常：{ex.Message}");
+            }
+        }
+
+        // ==================== 主动取流 / 停止 ====================
+
+        /// <summary>开启采流（主动取流）：StartGrabbing + 取流线程轮询</summary>
+        public async Task<OperationResult> StartStreamAsync(string serialNumber, Action<CameraFrame> frameCallback)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("序列号不能为空");
+            if (frameCallback == null)
+                return OperationResult.Fail("帧回调不能为空");
+
+            if (!_cameraContexts.TryGetValue(serialNumber, out var ctx))
+                return OperationResult.Fail("设备未连接，请先连接后再开启采流");
+
+            if (ctx.IsGrabbing)
+                return OperationResult.Succes("设备已在采流中");
+
+            try
+            {
+                ctx.FrameCallback = frameCallback;
+
+                // 主动取流：开启 SDK 采集
+                int ret = ctx.CameraObj.MV_CC_StartGrabbing_NET();
+                if (ret != MV_OK)
+                    return OperationResult.Fail($"开启采集失败：{GetErrorMessage(ret)}");
+
+                // 启动主动取流线程（GetImageBuffer 轮询）
+                ctx.IsGrabbing = true;
+                ctx.GrabThread = new Thread(GrabThreadProcess)
+                {
+                    IsBackground = true,
+                    Name = $"CameraGrab_{serialNumber}",
+                    Priority = ThreadPriority.AboveNormal
+                };
+                ctx.GrabThread.Start(ctx);
+
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                ctx.IsGrabbing = false;
+                return OperationResult.Fail($"开启采流异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>停止采流：结束取流线程 → StopGrabbing → 释放缓冲</summary>
+        public async Task<OperationResult> StopStreamAsync(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("序列号不能为空");
+
+            if (!_cameraContexts.TryGetValue(serialNumber, out var ctx))
+                return OperationResult.Succes("设备未连接，无需停止采流");
+
+            if (!ctx.IsGrabbing)
+                return OperationResult.Succes("设备未在采流中");
+
+            try
+            {
+                ctx.IsGrabbing = false;
+                JoinGrabThread(ctx);
+
+                int ret = ctx.CameraObj.MV_CC_StopGrabbing_NET();
+                ReleaseGrabBuffer(ctx);
+                ctx.FrameCallback = null;
+
+                return ret == MV_OK
+                    ? OperationResult.Succes()
+                    : OperationResult.Fail($"停止采流失败：{GetErrorMessage(ret)}");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail($"停止采流异常：{ex.Message}");
+            }
+        }
+
+        // ==================== 取流线程 ====================
+
+        /// <summary>
+        /// 主动取流线程：轮询 GetImageBuffer 拉取帧，转换为统一帧后回调
+        /// 【运行线程】独立后台线程
+        /// </summary>
+        private void GrabThreadProcess(object state)
+        {
+            var ctx = (CameraGrabContext)state;
+            var camera = ctx.CameraObj;
+            var frameInfo = new MyCamera.MV_FRAME_OUT();
+
+            while (ctx.IsGrabbing)
+            {
+                try
+                {
+                    // 超时 80ms 取一帧，避免线程卡死
+                    int ret = camera.MV_CC_GetImageBuffer_NET(ref frameInfo, 80);
+                    if (ret != MV_OK)
                     {
-                        if (_scannedDeviceInfoCache.TryGetValue(connectParam.SerialNumber, out var cachedInfo))
-                        {
-                            deviceInfo = cachedInfo;
-                          
-                        }
-                        else
-                        {
-                            deviceInfo = new MV_CC_DEVICE_INFO();
-                        }
-/*
-                        if (!string.IsNullOrWhiteSpace(connectParam.SerialNumber))
-                        {
-                            ret = cameraObj.MV_CC_CreateDeviceBySerialNumber_NET(connectParam.SerialNumber);
-                        }
-                        // 备用：按IP创建
-                        else if (!string.IsNullOrWhiteSpace(connectParam.IpAddress))
-                        {
-                            ret = cameraObj.MV_CC_CreateDeviceByIp_NET(connectParam.IpAddress);
-                        }
-                        else
-                        {
-                            return ERR_PARAM_EMPTY;
-                        }
-*/
+                        Thread.Sleep(1);
+                        continue;
+                    }
+
+                    // 转换为统一帧格式并回调
+                    var frame = ConvertToCameraFrame(camera, ref frameInfo, ctx);
+                    ctx.FrameCallback?.Invoke(frame);
+
+                    // 必须释放 SDK 图像缓冲，否则后续取流失败
+                    camera.MV_CC_FreeImageBuffer_NET(ref frameInfo);
+                }
+                catch
+                {
+                    // 采集异常不崩溃，稍作等待继续下一帧
+                    Thread.Sleep(10);
+                }
+            }
+        }
+
+        /// <summary>将 SDK 帧转换为统一业务帧（托管内存独立拷贝，脱离 SDK 生命周期）</summary>
+        private CameraFrame ConvertToCameraFrame(MyCamera camera, ref MyCamera.MV_FRAME_OUT frameInfo, CameraGrabContext ctx)
+        {
+            int width = (int)frameInfo.stFrameInfo.nWidth;
+            int height = (int)frameInfo.stFrameInfo.nHeight;
+            var srcPixel = frameInfo.stFrameInfo.enPixelType;
+
+            // 单色 → Mono8（1 字节/像素），彩色 → RGB24（3 字节/像素）
+            bool isMono = IsMonoPixel(srcPixel);
+            var dstPixel = isMono
+                ? MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8
+                : MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed;
+            int bytesPerPixel = isMono ? 1 : 3;
+            int dstSize = width * height * bytesPerPixel;
+
+            EnsureConvertBuffer(ctx, dstSize);
+
+            // 构造像素格式转换参数（源缓冲必须显式指定，否则转换失败）
+            var convertParam = new MyCamera.MV_PIXEL_CONVERT_PARAM();
+            convertParam.nWidth = frameInfo.stFrameInfo.nWidth;
+            convertParam.nHeight = frameInfo.stFrameInfo.nHeight;
+           /* convertParam.pSrcBuffer = frameInfo.pBufAddr;
+            convertParam.nSrcBufferLen = frameInfo.stFrameInfo.nFrameLen;*/
+            convertParam.enSrcPixelType = srcPixel;
+            convertParam.enDstPixelType = dstPixel;
+            convertParam.pDstBuffer = ctx.ConvertBuffer;
+            convertParam.nDstBufferSize = (uint)dstSize;
+
+            byte[] data;
+            int convertRet = camera.MV_CC_ConvertPixelType_NET(ref convertParam);
+            if (convertRet == MV_OK)
+            {
+                // 转换成功：从转换缓冲拷贝到独立托管数组
+                data = new byte[dstSize];
+                Marshal.Copy(ctx.ConvertBuffer, data, 0, dstSize);
+            }
+            else
+            {
+                // 转换失败：退回直接拷贝原始数据（保底可用）
+                int rawLen = (int)frameInfo.stFrameInfo.nFrameLen;
+                data = new byte[rawLen];
+                Marshal.Copy(frameInfo.pBufAddr, data, 0, rawLen);
+            }
+
+            // 海康时间戳：高 32 位 + 低 32 位组合成 64 位 tick（纳秒）
+            long timestamp = (long)(((ulong)frameInfo.stFrameInfo.nDevTimeStampHigh << 32)
+                                    | frameInfo.stFrameInfo.nDevTimeStampLow);
+
+            return new CameraFrame
+            {
+                Width = width,
+                Height = height,
+                PixelFormat = isMono ? PixelFormatEnum.Mono8 : PixelFormatEnum.RGB24,
+                Data = data,
+                Timestamp = timestamp,
+                FrameId = frameInfo.stFrameInfo.nFrameNum
+            };
+        }
+
+        /// <summary>判断是否为单色（灰度）像素格式</summary>
+        private bool IsMonoPixel(MyCamera.MvGvspPixelType pixelType)
+        {
+            return pixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8
+                || pixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono10
+                || pixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono12;
+        }
+
+        // ==================== 登录（私有，不暴露 SDK 句柄） ====================
+
+        /// <summary>异步登录：创建并打开设备，返回 SDK 句柄与错误码（仅类内部使用）</summary>
+        private Task<(int errorCode, MyCamera cameraObj)> LoginAsync(CameraConnectConfig connectParam)
+        {
+            return Task.Run(() =>
+            {
+                int ret = Login(connectParam, out var cam);
+                return (ret, cam);
+            });
+        }
+
+        /// <summary>同步登录：创建设备 → 打开设备 → 配置默认采集参数</summary>
+        private int Login(CameraConnectConfig connectParam, out MyCamera cameraObj)
+        {
+            cameraObj = null;
+            if (connectParam == null)
+                return ERR_PARAM_NULL;
+
+            try
+            {
+                MyCamera.MV_CC_DEVICE_INFO deviceInfo;
+
+                // 优先从扫描缓存取完整结构体（官方标准路径，成功率最高）
+                lock (_cacheLock)
+                {
+                    if (!string.IsNullOrWhiteSpace(connectParam.SerialNumber)
+                        && _scannedDeviceInfoCache.TryGetValue(connectParam.SerialNumber, out var cached))
+                    {
+                        deviceInfo = cached;
+                    }
+                    else
+                    {
+                        deviceInfo = new MyCamera.MV_CC_DEVICE_INFO();
                     }
                 }
-                else
-                {
-                    deviceInfo = new MV_CC_DEVICE_INFO();
-                }
+
                 cameraObj = new MyCamera();
+
                 int createRet = cameraObj.MV_CC_CreateDevice_NET(ref deviceInfo);
                 if (createRet != MV_OK)
                 {
@@ -229,7 +527,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
                     return openRet;
                 }
 
-                // GigE相机设置最佳包大小
+                // GigE 相机设置最佳包大小
                 if (deviceInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
                 {
                     int packetSize = cameraObj.MV_CC_GetOptimalPacketSize_NET();
@@ -239,275 +537,136 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
                     }
                 }
 
-                // 默认参数初始化
-                cameraObj.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
-                cameraObj.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
+                // 默认连续采集、关闭触发
+                cameraObj.MV_CC_SetEnumValue_NET("AcquisitionMode",
+                    (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
+                cameraObj.MV_CC_SetEnumValue_NET("TriggerMode",
+                    (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
 
                 return MV_OK;
-
             }
-            catch (Exception)
+            catch
             {
                 // 异常兜底：确保句柄一定释放
                 if (cameraObj != null)
                 {
-                    try
-                    {
-                        cameraObj.MV_CC_DestroyDevice_NET();
-                    }
-                    catch { }
+                    try { cameraObj.MV_CC_DestroyDevice_NET(); } catch { }
                     cameraObj = null;
                 }
                 return ERR_EXCEPTION;
             }
-
         }
 
-        public int OpenStream(MyCamera cameraObj)
+        // ==================== 缓冲管理 ====================
+
+        /// <summary>按需分配非托管转换缓冲（不够大才重新分配）</summary>
+        private void EnsureConvertBuffer(CameraGrabContext ctx, int size)
         {
-            if (cameraObj == null) return ERR_INVALID_HANDLE;
-            if (_isGrabbing) return MV_OK; // 幂等：已在采集中直接返回
+            if (ctx.ConvertBuffer != IntPtr.Zero && ctx.ConvertBufferSize >= size)
+                return;
 
-            try
+            if (ctx.ConvertBuffer != IntPtr.Zero)
             {
-                // 1. 采集前置配置：读取宽高+像素格式 + 分配转换缓冲区（对应官方 NecessaryOperBeforeGrab）
-                int ret = InitGrabBuffer(cameraObj);
-                if (ret != MV_OK) return ret;
+                Marshal.FreeHGlobal(ctx.ConvertBuffer);
+                ctx.ConvertBuffer = IntPtr.Zero;
+            }
 
-                // 2. 启动采集线程
-                _isGrabbing = true;
-                _grabThread = new Thread(GrabThreadProcess)
+            ctx.ConvertBuffer = Marshal.AllocHGlobal(size);
+            ctx.ConvertBufferSize = (uint)size;
+        }
+
+        /// <summary>释放非托管转换缓冲</summary>
+        private void ReleaseGrabBuffer(CameraGrabContext ctx)
+        {
+            if (ctx.ConvertBuffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(ctx.ConvertBuffer);
+                ctx.ConvertBuffer = IntPtr.Zero;
+            }
+            ctx.ConvertBufferSize = 0;
+        }
+
+        // ==================== SDK 生命周期 / 工具 ====================
+
+        /// <summary>SDK 初始化（线程安全，幂等）</summary>
+        private void InitSdkIfNot()
+        {
+            if (_sdkInited) return;
+
+            lock (_sdkLock)
+            {
+                if (_sdkInited) return;
+                int code = MyCamera.MV_CC_Initialize_NET();
+                if (code != MV_OK)
+                    throw new HardwareException($"海康SDK初始化失败，错误码{code}", code);
+                _sdkInited = true;
+            }
+        }
+
+        /// <summary>错误码转可读信息</summary>
+        private string GetErrorMessage(int errorCode)
+        {
+            return _errorCodeMap.TryGetValue(errorCode, out var msg)
+                ? msg
+                : $"未知错误码：{errorCode}";
+        }
+
+        /// <summary>等待取流线程退出（上限 2 秒，避免死等）</summary>
+        private static void JoinGrabThread(CameraGrabContext ctx)
+        {
+            var thread = ctx.GrabThread;
+            if (thread != null && thread.IsAlive && thread != Thread.CurrentThread)
+            {
+                thread.Join(2000);
+            }
+            ctx.GrabThread = null;
+        }
+
+        /// <summary>销毁设备（异常兜底，避免句柄泄漏）</summary>
+        private static void TryDestroyDevice(MyCamera cameraObj)
+        {
+            if (cameraObj == null) return;
+            try { cameraObj.MV_CC_DestroyDevice_NET(); } catch { }
+        }
+
+        /// <summary>释放所有相机会话并反初始化 SDK</summary>
+        public void Dispose()
+        {
+            foreach (var serial in _cameraContexts.Keys.ToList())
+            {
+                if (_cameraContexts.TryRemove(serial, out var ctx))
                 {
-                    IsBackground = true,
-                    Priority = ThreadPriority.AboveNormal
-                };
-                _grabThread.Start(cameraObj);
-
-                // 3. 调用SDK开始取流
-                ret = cameraObj.MV_CC_StartGrabbing_NET();
-                if (ret != MV_OK)
-                {
-                    _isGrabbing = false;
-                    return ret;
-                }
-
-                return MV_OK;
-            }
-            catch (Exception)
-            {
-                _isGrabbing = false;
-                ReleaseGrabBuffer();
-                return ERR_EXCEPTION;
-            }
-        }
-
-        public int CloseStream(MyCamera cameraObj)
-        {
-            if (cameraObj == null) return ERR_INVALID_HANDLE;
-            try
-            {
-                return cameraObj.MV_CC_StopGrabbing_NET();
-            }
-            catch (Exception)
-            {
-                return ERR_EXCEPTION;
-            }
-        }
-
-        public int Logout(MyCamera cameraObj)
-        {
-            if (cameraObj == null) return MV_OK;
-
-            try
-            {
-                // 兜底停止采集，防止漏关流导致资源残留
-                cameraObj.MV_CC_StopGrabbing_NET();
-                // 关闭并销毁设备
-                cameraObj.MV_CC_CloseDevice_NET();
-                cameraObj.MV_CC_DestroyDevice_NET();
-
-                return MV_OK;
-            }
-            catch (Exception)
-            {
-                return ERR_EXCEPTION;
-            }
-        }
-        private int IpStringToUint(string ipStr,out uint ipUint)
-        {
-            ipUint = 0;
-            if (!IPAddress.TryParse(ipStr, out var iPAdd))
-                return ERR_INVALID_HANDLE;
-
-            ipUint = (uint)IPAddress.HostToNetworkOrder((int)iPAdd.AddressFamily);
-            return MV_OK;
-        }
-        private int InitGrabBuffer(MyCamera cameraObj)
-        {
-            // 1. 读取图像宽度
-            MVCC_INTVALUE_EX stWidth = new MVCC_INTVALUE_EX();
-            int ret = cameraObj.MV_CC_GetIntValueEx_NET("Width", ref stWidth);
-            if (ret != MV_OK) return ret;
-
-            // 2. 读取图像高度
-            MVCC_INTVALUE_EX stHeight = new MVCC_INTVALUE_EX();
-            ret = cameraObj.MV_CC_GetIntValueEx_NET("Height", ref stHeight);
-            if (ret != MV_OK) return ret;
-
-            // 3. 读取像素格式
-            MVCC_ENUMVALUE stPixelFormat = new MVCC_ENUMVALUE();
-            ret = cameraObj.MV_CC_GetEnumValue_NET("PixelFormat", ref stPixelFormat);
-            if (ret != MV_OK) return ret;
-
-            // 4. 像素格式判断 + 分配转换缓冲区（完全复用官方逻辑）
-            var pixelType = (Int32)stPixelFormat.nCurValue;
-            if (pixelType == (Int32)MyCamera.MvGvspPixelType.PixelType_Gvsp_Undefined)
-                return MyCamera.MV_E_UNKNOW;
-
-            // 释放旧缓冲区
-            if (_convertBuffer != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(_convertBuffer);
-                _convertBuffer = IntPtr.Zero;
-            }
-
-            if (IsMonoPixel(stPixelFormat.nCurValue))
-            {
-                _pixelFormat = PixelFormat.Format8bppIndexed;
-                _convertBufferSize = (uint)(stWidth.nCurValue * stHeight.nCurValue);
-            }
-            else
-            {
-                _pixelFormat = PixelFormat.Format24bppRgb;
-                _convertBufferSize = (uint)(3 * stWidth.nCurValue * stHeight.nCurValue);
-            }
-
-            _convertBuffer = Marshal.AllocHGlobal((int)_convertBufferSize);
-            if (_convertBuffer == IntPtr.Zero)
-                return MyCamera.MV_E_RESOURCE;
-
-            // 5. 初始化位图对象
-            _currentBitmap?.Dispose();
-            _currentBitmap = new Bitmap((int)stWidth.nCurValue, (int)stHeight.nCurValue, _pixelFormat);
-
-            // 6. Mono8格式设置灰度调色板（官方逻辑完整保留）
-            if (_pixelFormat == PixelFormat.Format8bppIndexed)
-            {
-                ColorPalette palette = _currentBitmap.Palette;
-                for (int i = 0; i < palette.Entries.Length; i++)
-                {
-                    palette.Entries[i] = Color.FromArgb(i, i, i);
-                }
-                _currentBitmap.Palette = palette;
-            }
-
-            return MV_OK;
-        }
-        private bool IsMonoPixel(UInt32 pixelType)
-        {
-            return pixelType == (UInt32)MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8
-                || pixelType == (UInt32)MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono10
-                || pixelType == (UInt32)MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono12;
-        }
-        private void GrabThreadProcess(object obj)
-        {
-            MyCamera camera = (MyCamera)obj;
-            MV_FRAME_OUT frameInfo = new MV_FRAME_OUT();
-
-            while (_isGrabbing)
-            {
-                try
-                {
-                    // 超时取一帧（80ms超时，避免线程卡死）
-                    int ret = camera.MV_CC_GetImageBuffer_NET(ref frameInfo, 80);
-                    if (ret != MV_OK)
+                    try
                     {
-                        Thread.Sleep(1);
-                        continue;
+                        if (ctx.IsGrabbing)
+                        {
+                            ctx.IsGrabbing = false;
+                            JoinGrabThread(ctx);
+                            ctx.CameraObj.MV_CC_StopGrabbing_NET();
+                        }
+                        ReleaseGrabBuffer(ctx);
+                        ctx.CameraObj.MV_CC_CloseDevice_NET();
+                        ctx.CameraObj.MV_CC_DestroyDevice_NET();
                     }
-
-                    // 像素格式转换（SDK内置转换，输出到我们的托管缓冲区）
-                    MyCamera.MV_PIXEL_CONVERT_PARAM convertParam = new MyCamera.MV_PIXEL_CONVERT_PARAM();
-                    convertParam.nWidth = frameInfo.stFrameInfo.nWidth;
-                    convertParam.nHeight = frameInfo.stFrameInfo.nHeight;
-                    /*convertParam.pSrcBuffer = frameInfo.pBufAddr;
-                    convertParam.nSrcBufferLen = frameInfo.stFrameInfo.nFrameLen;*/
-                    
-                    convertParam.enSrcPixelType = frameInfo.stFrameInfo.enPixelType;
-                    convertParam.enDstPixelType = GetDstPixelType(_pixelFormat);
-                    convertParam.pDstBuffer = _convertBuffer;
-                    convertParam.nDstBufferSize = _convertBufferSize;
-
-                    ret = camera.MV_CC_ConvertPixelType_NET(ref convertParam);
-                    if (ret == MV_OK)
+                    catch
                     {
-                        // 拷贝数据到位图
-                        BitmapData bmpData = _currentBitmap.LockBits(
-                            new Rectangle(0, 0, _currentBitmap.Width, _currentBitmap.Height),
-                            ImageLockMode.WriteOnly,
-                            _currentBitmap.PixelFormat);
-
-                        CopyMemory(bmpData.Scan0, _convertBuffer, _convertBufferSize);
-                        _currentBitmap.UnlockBits(bmpData);
-
-                        // 触发事件，向上层推送图像
-                        FrameReceived?.Invoke(this, new CameraFrameEventArgs(
-                            string.Empty,
-                            (Bitmap)_currentBitmap.Clone(),
-                            (int)frameInfo.stFrameInfo.nWidth,
-                            (int)frameInfo.stFrameInfo.nHeight,
-                            frameInfo.stFrameInfo.nFrameNum,
-                            frameInfo.stFrameInfo.nDevTimeStampHigh));
+                        // 释放阶段忽略异常，保证尽量释放资源
                     }
-
-                    // 释放SDK图像缓冲区（必须调用，否则会取流失败）
-                    camera.MV_CC_FreeImageBuffer_NET(ref frameInfo);
                 }
-                catch
+            }
+
+            // 反初始化 SDK
+            if (_sdkInited)
+            {
+                lock (_sdkLock)
                 {
-                    // 采集异常不崩溃，继续下一帧
-                    Thread.Sleep(10);
+                    if (_sdkInited)
+                    {
+                        MyCamera.MV_CC_Finalize_NET();
+                        _sdkInited = false;
+                    }
                 }
             }
-        }
-        private MyCamera.MvGvspPixelType GetDstPixelType(PixelFormat format)
-        {
-            return format == PixelFormat.Format8bppIndexed
-                ? MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8
-                : MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed;
-        }
-       
-        private void ReleaseGrabBuffer()
-        {
-            if (_convertBuffer != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(_convertBuffer);
-                _convertBuffer = IntPtr.Zero;
-            }
-            _currentBitmap?.Dispose();
-            _currentBitmap = null;
-            _convertBufferSize = 0;
-        }
-        public Task<(int errorCode, MyCamera cameraObj)> LoginAsync(CameraConnectConfig connectParam)
-        {
-            return Task.Run(() =>
-            {
-                int ret = Login(connectParam, out var cam);
-                return (ret, cam);
-            });
-        }
-        public Task<int> OpenStreamAsync(MyCamera cameraObj)
-        {
-            return Task.Run(() => OpenStream(cameraObj));
-        }
-        public Task<int> CloseStreamAsync(MyCamera cameraObj)
-        {
-            return Task.Run(() => CloseStream(cameraObj));
-        }
-
-        public Task<int> LogoutAsync(MyCamera cameraObj)
-        {
-            return Task.Run(() => Logout(cameraObj));
         }
     }
 }

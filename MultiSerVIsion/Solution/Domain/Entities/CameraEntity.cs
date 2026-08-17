@@ -1,9 +1,7 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
 using MultiSerVIsion.Solution.Domain.Models;
-using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Shared.Models;
-using MvCamCtrl.NET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +15,7 @@ namespace MultiSerVIsion.Solution.Domain.Entities
     {
         public CameraAllConfig CameraAllConfig { get; set; }= new CameraAllConfig();
 
-        public MyCamera CameraHandle { get; set; } = null;
+     
         [JsonIgnore]
         public CameraStatus DetailStatus { get; set; } = CameraStatus.Idle;
         public DateTime LastConnectTime {  get; set; }

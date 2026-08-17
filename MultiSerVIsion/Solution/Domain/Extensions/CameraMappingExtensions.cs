@@ -1,7 +1,6 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Factory;
 using MultiSerVIsion.Solution.Domain.Models;
-using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,7 @@ namespace MultiSerVIsion.Solution.Shared.Extensions
 {
     public static class CameraMappingExtensions
     {
-        public static CameraDeviceDto ToCameraDeviceDto(this CameraHardwareRawDto raw)
+/*        public static CameraDeviceDto ToCameraDeviceDto(this CameraHardwareRawDto raw)
         {
             return new CameraDeviceDto
             {
@@ -28,7 +27,7 @@ namespace MultiSerVIsion.Solution.Shared.Extensions
         public static List<CameraDeviceDto> ToCameraDeviceDtoList(this List<CameraHardwareRawDto> rawList)
         {
             return rawList.Select(x => x.ToCameraDeviceDto()).ToList();
-        }
+        }*/
 
         /// <summary>
         /// 扫描到的在线相机 → 生成待新增设备实体（用户点击添加设备时调用）
