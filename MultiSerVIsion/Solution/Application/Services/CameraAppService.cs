@@ -82,10 +82,13 @@ namespace MultiSerVIsion.Solution.Application.Services
                 // 2. 扫描 DTO → 持久化实体（调用映射扩展方法）
                 var cameraEntity = scannedCamera.ToNewCameraEntity();
 
-                // 3. 加入内存管理器（内部自动执行校验+去重）
+                // 3. 加入内存管理器
+                // 【说明】扫描结果来源于硬件真值（序列号/型号/接口类型均由设备提供），
+                //          不是“用户表单输入”，因此跳过 ValidateRule 表单校验，
+                //          仅由 DeviceManager 做 ID 去重与完整性检查，避免 IP 等表单规则误拦。
                 bool addOk = _deviceManager.AddDevice(cameraEntity);
                 if (!addOk)
-                    return OperationResult<DeviceEntity>.Fail("添加失败，设备校验不通过");
+                    return OperationResult<DeviceEntity>.Fail("添加失败：设备ID重复或数据不完整");
 
                 return OperationResult<DeviceEntity>.Succes(cameraEntity);
             }
@@ -246,6 +249,7 @@ namespace MultiSerVIsion.Solution.Application.Services
                 return validateResult;
 
             var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+
             if (string.IsNullOrWhiteSpace(serialNumber))
                 return OperationResult.Fail("设备缺少序列号，无法开启采流");
 

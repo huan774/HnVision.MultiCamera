@@ -8,8 +8,10 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
 {
     /// <summary>
     /// 设备管理器：内存聚合根 + 持久化协调器。
-    /// 【职责】内存为唯一权威源，负责设备的增删改查与业务校验；
-    /// 每次变更后调用仓储 SaveAll 全量落盘，仓储只负责文件快照读写（各司其职）。
+    /// 【职责】内存为唯一权威源，负责设备的增删改查；每次变更后调用仓储 SaveAll 全量落盘。
+    /// 【校验边界】本类只做完整性检查（空值 / ID 非空 / ID 去重），不执行业务校验；
+    /// 业务校验由应用层在「用户输入入口」统一调用 DeviceDomainService，避免重复校验，
+    /// 也避免扫描导入等受信任来源被表单规则误拦。
     /// </summary>
     public class DeviceManager : IDeviceManager
     {
@@ -49,6 +51,13 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
             return GetDeviceById(deviceId)?.GroupTage ?? string.Empty;
         }
 
+        /// <summary>
+        /// 新增设备：仅做完整性检查，不执行业务校验。
+        /// 【职责】业务校验属于应用层「用户输入入口」的职责，本类再次校验会造成重复调用；
+        /// 由调用方（DeviceAppService.CreateDevice）负责先校验再入库。
+        /// </summary>
+        /// <param name="device">待新增的设备实体</param>
+        /// <returns>新增成功返回 true；参数不合法或 ID 重复返回 false</returns>
         public bool AddDevice(DeviceEntity device)
         {
             // 1. 基础空校验
@@ -57,11 +66,6 @@ namespace MultiSerVIsion.Solution.Infrastructure.Repository
 
             // 2. 防重复：ID已存在则拒绝新增
             if (_inMemoryStore.Any(d => d.DeviceId == device.DeviceId))
-                return false;
-
-            // 3. 执行实体自校验，不合法不入库
-            var validateResult = device.SelfValidate();
-            if (!validateResult.IsValid)
                 return false;
 
             _inMemoryStore.Add(device);

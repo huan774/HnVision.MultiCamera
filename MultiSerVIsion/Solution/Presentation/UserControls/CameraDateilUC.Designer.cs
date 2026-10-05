@@ -30,32 +30,31 @@
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.chk_AutoExposureDefault = new System.Windows.Forms.CheckBox();
-            this.num_CamGiain = new System.Windows.Forms.NumericUpDown();
+            this.nud_ReConnection = new System.Windows.Forms.NumericUpDown();
+            this.cmb_PixelFormat = new System.Windows.Forms.ComboBox();
+            this.cmb_Rio = new System.Windows.Forms.ComboBox();
+            this.nud_ExposureTime = new System.Windows.Forms.NumericUpDown();
+            this.lbl_PixelFormat = new System.Windows.Forms.Label();
             this.num_CamExposureUs = new System.Windows.Forms.NumericUpDown();
-            this.lbl_CamGiain = new System.Windows.Forms.Label();
-            this.lbl_CamExposureUs = new System.Windows.Forms.Label();
-            this.cbx_CamTrigger = new System.Windows.Forms.ComboBox();
-            this.cbx_CamType = new System.Windows.Forms.ComboBox();
-            this.lbl_CamChannel = new System.Windows.Forms.Label();
-            this.lbl_CamPort = new System.Windows.Forms.Label();
-            this.lbl_CamTriggerMode = new System.Windows.Forms.Label();
-            this.lbl_CamType = new System.Windows.Forms.Label();
-            this.nud_CamChannel = new System.Windows.Forms.NumericUpDown();
-            this.num_CamPort = new System.Windows.Forms.NumericUpDown();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.lbl_DeviceName = new System.Windows.Forms.Label();
-            this.lbl_deviceType = new System.Windows.Forms.Label();
-            this.lbl_deviceStuate = new System.Windows.Forms.Label();
-            this.lbl_deviceID = new System.Windows.Forms.Label();
+            this.lbl_Rio = new System.Windows.Forms.Label();
+            this.lbl_AcquisitionMode = new System.Windows.Forms.Label();
+            this.lbl_TriggerMode = new System.Windows.Forms.Label();
+            this.lbl_BalanceWhite = new System.Windows.Forms.Label();
+            this.lbl_Gain = new System.Windows.Forms.Label();
+            this.lbl_ExposureTime = new System.Windows.Forms.Label();
+            this.num_BalanceWhite = new System.Windows.Forms.NumericUpDown();
+            this.chk_AutoExposureDefault = new System.Windows.Forms.CheckBox();
+            this.lbl_ReConnection = new System.Windows.Forms.Label();
+            this.cmb_TriggerMode = new System.Windows.Forms.ComboBox();
+            this.nud_Gain = new System.Windows.Forms.NumericUpDown();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.num_CamGiain)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_ReConnection)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_ExposureTime)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_CamExposureUs)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nud_CamChannel)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.num_CamPort)).BeginInit();
-            this.flowLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.num_BalanceWhite)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_Gain)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,66 +62,138 @@
             // 
             this.groupBox1.Controls.Add(this.tableLayoutPanel2);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox1.Location = new System.Drawing.Point(3, 73);
+            this.groupBox1.Location = new System.Drawing.Point(4, 3);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1137, 1035);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.groupBox1.Size = new System.Drawing.Size(754, 1244);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "参数配置";
             // 
             // tableLayoutPanel2
             // 
-            this.tableLayoutPanel2.AutoScroll = true;
+            this.tableLayoutPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel2.AutoSize = true;
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Controls.Add(this.chk_AutoExposureDefault, 1, 6);
-            this.tableLayoutPanel2.Controls.Add(this.num_CamGiain, 1, 5);
+            this.tableLayoutPanel2.Controls.Add(this.nud_ReConnection, 1, 7);
+            this.tableLayoutPanel2.Controls.Add(this.cmb_PixelFormat, 1, 6);
+            this.tableLayoutPanel2.Controls.Add(this.cmb_Rio, 1, 5);
+            this.tableLayoutPanel2.Controls.Add(this.nud_ExposureTime, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_PixelFormat, 0, 6);
             this.tableLayoutPanel2.Controls.Add(this.num_CamExposureUs, 1, 4);
-            this.tableLayoutPanel2.Controls.Add(this.lbl_CamGiain, 0, 5);
-            this.tableLayoutPanel2.Controls.Add(this.lbl_CamExposureUs, 0, 4);
-            this.tableLayoutPanel2.Controls.Add(this.cbx_CamTrigger, 1, 1);
-            this.tableLayoutPanel2.Controls.Add(this.cbx_CamType, 1, 0);
-            this.tableLayoutPanel2.Controls.Add(this.lbl_CamChannel, 0, 3);
-            this.tableLayoutPanel2.Controls.Add(this.lbl_CamPort, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this.lbl_CamTriggerMode, 0, 1);
-            this.tableLayoutPanel2.Controls.Add(this.lbl_CamType, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.nud_CamChannel, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this.num_CamPort, 1, 2);
-            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 31);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_Rio, 0, 5);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_AcquisitionMode, 0, 4);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_TriggerMode, 0, 3);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_BalanceWhite, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_Gain, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_ExposureTime, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.num_BalanceWhite, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this.chk_AutoExposureDefault, 1, 8);
+            this.tableLayoutPanel2.Controls.Add(this.lbl_ReConnection, 0, 7);
+            this.tableLayoutPanel2.Controls.Add(this.cmb_TriggerMode, 1, 3);
+            this.tableLayoutPanel2.Controls.Add(this.nud_Gain, 1, 1);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(4, 34);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 7;
+            this.tableLayoutPanel2.RowCount = 9;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(1131, 1001);
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(750, 1207);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
-            // chk_AutoExposureDefault
+            // nud_ReConnection
             // 
-            this.chk_AutoExposureDefault.AutoSize = true;
-            this.chk_AutoExposureDefault.Location = new System.Drawing.Point(568, 603);
-            this.chk_AutoExposureDefault.Name = "chk_AutoExposureDefault";
-            this.chk_AutoExposureDefault.Size = new System.Drawing.Size(138, 28);
-            this.chk_AutoExposureDefault.TabIndex = 23;
-            this.chk_AutoExposureDefault.Text = "自动曝光";
-            this.chk_AutoExposureDefault.UseVisualStyleBackColor = true;
+            this.nud_ReConnection.Location = new System.Drawing.Point(379, 843);
+            this.nud_ReConnection.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.nud_ReConnection.Maximum = new decimal(new int[] {
+            4000,
+            0,
+            0,
+            0});
+            this.nud_ReConnection.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nud_ReConnection.Name = "nud_ReConnection";
+            this.nud_ReConnection.Size = new System.Drawing.Size(140, 38);
+            this.nud_ReConnection.TabIndex = 31;
+            this.nud_ReConnection.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
             // 
-            // num_CamGiain
+            // cmb_PixelFormat
             // 
-            this.num_CamGiain.Location = new System.Drawing.Point(568, 503);
-            this.num_CamGiain.Name = "num_CamGiain";
-            this.num_CamGiain.Size = new System.Drawing.Size(120, 35);
-            this.num_CamGiain.TabIndex = 22;
+            this.cmb_PixelFormat.FormattingEnabled = true;
+            this.cmb_PixelFormat.Items.AddRange(new object[] {
+            "软触发",
+            "硬触发"});
+            this.cmb_PixelFormat.Location = new System.Drawing.Point(378, 723);
+            this.cmb_PixelFormat.Name = "cmb_PixelFormat";
+            this.cmb_PixelFormat.Size = new System.Drawing.Size(121, 35);
+            this.cmb_PixelFormat.TabIndex = 30;
+            // 
+            // cmb_Rio
+            // 
+            this.cmb_Rio.FormattingEnabled = true;
+            this.cmb_Rio.Items.AddRange(new object[] {
+            "软触发",
+            "硬触发"});
+            this.cmb_Rio.Location = new System.Drawing.Point(378, 603);
+            this.cmb_Rio.Name = "cmb_Rio";
+            this.cmb_Rio.Size = new System.Drawing.Size(121, 35);
+            this.cmb_Rio.TabIndex = 29;
+            // 
+            // nud_ExposureTime
+            // 
+            this.nud_ExposureTime.Location = new System.Drawing.Point(379, 3);
+            this.nud_ExposureTime.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.nud_ExposureTime.Maximum = new decimal(new int[] {
+            4000,
+            0,
+            0,
+            0});
+            this.nud_ExposureTime.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nud_ExposureTime.Name = "nud_ExposureTime";
+            this.nud_ExposureTime.Size = new System.Drawing.Size(140, 38);
+            this.nud_ExposureTime.TabIndex = 26;
+            this.nud_ExposureTime.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            // 
+            // lbl_PixelFormat
+            // 
+            this.lbl_PixelFormat.AutoSize = true;
+            this.lbl_PixelFormat.Location = new System.Drawing.Point(4, 720);
+            this.lbl_PixelFormat.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_PixelFormat.Name = "lbl_PixelFormat";
+            this.lbl_PixelFormat.Size = new System.Drawing.Size(120, 27);
+            this.lbl_PixelFormat.TabIndex = 24;
+            this.lbl_PixelFormat.Text = "像素格式";
             // 
             // num_CamExposureUs
             // 
-            this.num_CamExposureUs.Location = new System.Drawing.Point(568, 403);
+            this.num_CamExposureUs.Location = new System.Drawing.Point(379, 483);
+            this.num_CamExposureUs.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.num_CamExposureUs.Maximum = new decimal(new int[] {
             6000,
             0,
@@ -134,7 +205,7 @@
             0,
             0});
             this.num_CamExposureUs.Name = "num_CamExposureUs";
-            this.num_CamExposureUs.Size = new System.Drawing.Size(120, 35);
+            this.num_CamExposureUs.Size = new System.Drawing.Size(140, 38);
             this.num_CamExposureUs.TabIndex = 21;
             this.num_CamExposureUs.Value = new decimal(new int[] {
             4000,
@@ -142,193 +213,181 @@
             0,
             0});
             // 
-            // lbl_CamGiain
+            // lbl_Rio
             // 
-            this.lbl_CamGiain.AutoSize = true;
-            this.lbl_CamGiain.Location = new System.Drawing.Point(3, 500);
-            this.lbl_CamGiain.Name = "lbl_CamGiain";
-            this.lbl_CamGiain.Size = new System.Drawing.Size(106, 24);
-            this.lbl_CamGiain.TabIndex = 20;
-            this.lbl_CamGiain.Text = "默认增益";
+            this.lbl_Rio.AutoSize = true;
+            this.lbl_Rio.Location = new System.Drawing.Point(4, 600);
+            this.lbl_Rio.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_Rio.Name = "lbl_Rio";
+            this.lbl_Rio.Size = new System.Drawing.Size(54, 27);
+            this.lbl_Rio.TabIndex = 20;
+            this.lbl_Rio.Text = "ROI";
             // 
-            // lbl_CamExposureUs
+            // lbl_AcquisitionMode
             // 
-            this.lbl_CamExposureUs.AutoSize = true;
-            this.lbl_CamExposureUs.Location = new System.Drawing.Point(3, 400);
-            this.lbl_CamExposureUs.Name = "lbl_CamExposureUs";
-            this.lbl_CamExposureUs.Size = new System.Drawing.Size(106, 24);
-            this.lbl_CamExposureUs.TabIndex = 18;
-            this.lbl_CamExposureUs.Text = "默认曝光";
+            this.lbl_AcquisitionMode.AutoSize = true;
+            this.lbl_AcquisitionMode.Location = new System.Drawing.Point(4, 480);
+            this.lbl_AcquisitionMode.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_AcquisitionMode.Name = "lbl_AcquisitionMode";
+            this.lbl_AcquisitionMode.Size = new System.Drawing.Size(120, 27);
+            this.lbl_AcquisitionMode.TabIndex = 18;
+            this.lbl_AcquisitionMode.Text = "采集模式";
             // 
-            // cbx_CamTrigger
+            // lbl_TriggerMode
             // 
-            this.cbx_CamTrigger.FormattingEnabled = true;
-            this.cbx_CamTrigger.Location = new System.Drawing.Point(568, 103);
-            this.cbx_CamTrigger.Name = "cbx_CamTrigger";
-            this.cbx_CamTrigger.Size = new System.Drawing.Size(150, 32);
-            this.cbx_CamTrigger.TabIndex = 9;
+            this.lbl_TriggerMode.AutoSize = true;
+            this.lbl_TriggerMode.Location = new System.Drawing.Point(4, 360);
+            this.lbl_TriggerMode.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_TriggerMode.Name = "lbl_TriggerMode";
+            this.lbl_TriggerMode.Size = new System.Drawing.Size(120, 27);
+            this.lbl_TriggerMode.TabIndex = 7;
+            this.lbl_TriggerMode.Text = "触发模式";
             // 
-            // cbx_CamType
+            // lbl_BalanceWhite
             // 
-            this.cbx_CamType.FormattingEnabled = true;
-            this.cbx_CamType.Location = new System.Drawing.Point(568, 3);
-            this.cbx_CamType.Name = "cbx_CamType";
-            this.cbx_CamType.Size = new System.Drawing.Size(150, 32);
-            this.cbx_CamType.TabIndex = 8;
+            this.lbl_BalanceWhite.AutoSize = true;
+            this.lbl_BalanceWhite.Location = new System.Drawing.Point(4, 240);
+            this.lbl_BalanceWhite.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_BalanceWhite.Name = "lbl_BalanceWhite";
+            this.lbl_BalanceWhite.Size = new System.Drawing.Size(93, 27);
+            this.lbl_BalanceWhite.TabIndex = 6;
+            this.lbl_BalanceWhite.Text = "白平衡";
             // 
-            // lbl_CamChannel
+            // lbl_Gain
             // 
-            this.lbl_CamChannel.AutoSize = true;
-            this.lbl_CamChannel.Location = new System.Drawing.Point(3, 300);
-            this.lbl_CamChannel.Name = "lbl_CamChannel";
-            this.lbl_CamChannel.Size = new System.Drawing.Size(106, 24);
-            this.lbl_CamChannel.TabIndex = 7;
-            this.lbl_CamChannel.Text = "触发通道";
+            this.lbl_Gain.AutoSize = true;
+            this.lbl_Gain.Location = new System.Drawing.Point(4, 120);
+            this.lbl_Gain.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_Gain.Name = "lbl_Gain";
+            this.lbl_Gain.Size = new System.Drawing.Size(66, 27);
+            this.lbl_Gain.TabIndex = 5;
+            this.lbl_Gain.Text = "增益";
             // 
-            // lbl_CamPort
+            // lbl_ExposureTime
             // 
-            this.lbl_CamPort.AutoSize = true;
-            this.lbl_CamPort.Location = new System.Drawing.Point(3, 200);
-            this.lbl_CamPort.Name = "lbl_CamPort";
-            this.lbl_CamPort.Size = new System.Drawing.Size(106, 24);
-            this.lbl_CamPort.TabIndex = 6;
-            this.lbl_CamPort.Text = "通信端口";
+            this.lbl_ExposureTime.AutoSize = true;
+            this.lbl_ExposureTime.Location = new System.Drawing.Point(4, 0);
+            this.lbl_ExposureTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_ExposureTime.Name = "lbl_ExposureTime";
+            this.lbl_ExposureTime.Size = new System.Drawing.Size(120, 27);
+            this.lbl_ExposureTime.TabIndex = 4;
+            this.lbl_ExposureTime.Text = "曝光时间";
             // 
-            // lbl_CamTriggerMode
+            // num_BalanceWhite
             // 
-            this.lbl_CamTriggerMode.AutoSize = true;
-            this.lbl_CamTriggerMode.Location = new System.Drawing.Point(3, 100);
-            this.lbl_CamTriggerMode.Name = "lbl_CamTriggerMode";
-            this.lbl_CamTriggerMode.Size = new System.Drawing.Size(106, 24);
-            this.lbl_CamTriggerMode.TabIndex = 5;
-            this.lbl_CamTriggerMode.Text = "触发模式";
-            // 
-            // lbl_CamType
-            // 
-            this.lbl_CamType.AutoSize = true;
-            this.lbl_CamType.Location = new System.Drawing.Point(3, 0);
-            this.lbl_CamType.Name = "lbl_CamType";
-            this.lbl_CamType.Size = new System.Drawing.Size(106, 24);
-            this.lbl_CamType.TabIndex = 4;
-            this.lbl_CamType.Text = "接口类型";
-            // 
-            // nud_CamChannel
-            // 
-            this.nud_CamChannel.Location = new System.Drawing.Point(568, 303);
-            this.nud_CamChannel.Name = "nud_CamChannel";
-            this.nud_CamChannel.Size = new System.Drawing.Size(120, 35);
-            this.nud_CamChannel.TabIndex = 10;
-            // 
-            // num_CamPort
-            // 
-            this.num_CamPort.Location = new System.Drawing.Point(568, 203);
-            this.num_CamPort.Maximum = new decimal(new int[] {
+            this.num_BalanceWhite.Location = new System.Drawing.Point(379, 243);
+            this.num_BalanceWhite.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.num_BalanceWhite.Maximum = new decimal(new int[] {
             4000,
             0,
             0,
             0});
-            this.num_CamPort.Minimum = new decimal(new int[] {
+            this.num_BalanceWhite.Minimum = new decimal(new int[] {
             1000,
             0,
             0,
             0});
-            this.num_CamPort.Name = "num_CamPort";
-            this.num_CamPort.Size = new System.Drawing.Size(120, 35);
-            this.num_CamPort.TabIndex = 13;
-            this.num_CamPort.Value = new decimal(new int[] {
+            this.num_BalanceWhite.Name = "num_BalanceWhite";
+            this.num_BalanceWhite.Size = new System.Drawing.Size(140, 38);
+            this.num_BalanceWhite.TabIndex = 13;
+            this.num_BalanceWhite.Value = new decimal(new int[] {
             1000,
             0,
             0,
             0});
             // 
-            // flowLayoutPanel1
+            // chk_AutoExposureDefault
             // 
-            this.flowLayoutPanel1.AllowDrop = true;
-            this.flowLayoutPanel1.Controls.Add(this.lbl_DeviceName);
-            this.flowLayoutPanel1.Controls.Add(this.lbl_deviceType);
-            this.flowLayoutPanel1.Controls.Add(this.lbl_deviceStuate);
-            this.flowLayoutPanel1.Controls.Add(this.lbl_deviceID);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 3);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1137, 64);
-            this.flowLayoutPanel1.TabIndex = 0;
+            this.chk_AutoExposureDefault.AutoSize = true;
+            this.chk_AutoExposureDefault.Location = new System.Drawing.Point(379, 963);
+            this.chk_AutoExposureDefault.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.chk_AutoExposureDefault.Name = "chk_AutoExposureDefault";
+            this.chk_AutoExposureDefault.Size = new System.Drawing.Size(152, 31);
+            this.chk_AutoExposureDefault.TabIndex = 23;
+            this.chk_AutoExposureDefault.Text = "自动曝光";
+            this.chk_AutoExposureDefault.UseVisualStyleBackColor = true;
             // 
-            // lbl_DeviceName
+            // lbl_ReConnection
             // 
-            this.lbl_DeviceName.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lbl_DeviceName.AutoSize = true;
-            this.lbl_DeviceName.Location = new System.Drawing.Point(3, 0);
-            this.lbl_DeviceName.Name = "lbl_DeviceName";
-            this.lbl_DeviceName.Size = new System.Drawing.Size(82, 24);
-            this.lbl_DeviceName.TabIndex = 0;
-            this.lbl_DeviceName.Text = "设备名";
+            this.lbl_ReConnection.AutoSize = true;
+            this.lbl_ReConnection.Location = new System.Drawing.Point(4, 840);
+            this.lbl_ReConnection.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lbl_ReConnection.Name = "lbl_ReConnection";
+            this.lbl_ReConnection.Size = new System.Drawing.Size(120, 27);
+            this.lbl_ReConnection.TabIndex = 25;
+            this.lbl_ReConnection.Text = "重连次数";
             // 
-            // lbl_deviceType
+            // cmb_TriggerMode
             // 
-            this.lbl_deviceType.AutoSize = true;
-            this.lbl_deviceType.Location = new System.Drawing.Point(91, 0);
-            this.lbl_deviceType.Name = "lbl_deviceType";
-            this.lbl_deviceType.Size = new System.Drawing.Size(106, 24);
-            this.lbl_deviceType.TabIndex = 2;
-            this.lbl_deviceType.Text = "设备类型";
+            this.cmb_TriggerMode.FormattingEnabled = true;
+            this.cmb_TriggerMode.Items.AddRange(new object[] {
+            "软触发",
+            "硬触发"});
+            this.cmb_TriggerMode.Location = new System.Drawing.Point(378, 363);
+            this.cmb_TriggerMode.Name = "cmb_TriggerMode";
+            this.cmb_TriggerMode.Size = new System.Drawing.Size(121, 35);
+            this.cmb_TriggerMode.TabIndex = 28;
             // 
-            // lbl_deviceStuate
+            // nud_Gain
             // 
-            this.lbl_deviceStuate.AutoSize = true;
-            this.lbl_deviceStuate.Location = new System.Drawing.Point(203, 0);
-            this.lbl_deviceStuate.Name = "lbl_deviceStuate";
-            this.lbl_deviceStuate.Size = new System.Drawing.Size(106, 24);
-            this.lbl_deviceStuate.TabIndex = 3;
-            this.lbl_deviceStuate.Text = "在线状态";
-            // 
-            // lbl_deviceID
-            // 
-            this.lbl_deviceID.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lbl_deviceID.AutoSize = true;
-            this.lbl_deviceID.Location = new System.Drawing.Point(315, 0);
-            this.lbl_deviceID.Name = "lbl_deviceID";
-            this.lbl_deviceID.Size = new System.Drawing.Size(82, 24);
-            this.lbl_deviceID.TabIndex = 1;
-            this.lbl_deviceID.Text = "设备ID";
+            this.nud_Gain.Location = new System.Drawing.Point(379, 123);
+            this.nud_Gain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.nud_Gain.Maximum = new decimal(new int[] {
+            4000,
+            0,
+            0,
+            0});
+            this.nud_Gain.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nud_Gain.Name = "nud_Gain";
+            this.nud_Gain.Size = new System.Drawing.Size(140, 38);
+            this.nud_Gain.TabIndex = 27;
+            this.nud_Gain.Value = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
             // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.AllowDrop = true;
             this.tableLayoutPanel1.AutoScroll = true;
             this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 1);
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(1, 1);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
+            this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1143, 1181);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 79F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(762, 1329);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // CameraDateilUC
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 24F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 27F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "CameraDateilUC";
-            this.Size = new System.Drawing.Size(1145, 1240);
+            this.Size = new System.Drawing.Size(764, 1395);
             this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.num_CamGiain)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_ReConnection)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_ExposureTime)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_CamExposureUs)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nud_CamChannel)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.num_CamPort)).EndInit();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.num_BalanceWhite)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_Gain)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -337,25 +396,24 @@
         #endregion
 
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Label lbl_DeviceName;
-        private System.Windows.Forms.Label lbl_deviceType;
-        private System.Windows.Forms.Label lbl_deviceStuate;
-        private System.Windows.Forms.Label lbl_deviceID;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
-        private System.Windows.Forms.Label lbl_CamChannel;
-        private System.Windows.Forms.Label lbl_CamPort;
-        private System.Windows.Forms.Label lbl_CamTriggerMode;
-        private System.Windows.Forms.Label lbl_CamType;
-        private System.Windows.Forms.ComboBox cbx_CamTrigger;
-        private System.Windows.Forms.ComboBox cbx_CamType;
-        private System.Windows.Forms.NumericUpDown nud_CamChannel;
-        private System.Windows.Forms.NumericUpDown num_CamPort;
-        private System.Windows.Forms.NumericUpDown num_CamGiain;
+        private System.Windows.Forms.Label lbl_TriggerMode;
+        private System.Windows.Forms.Label lbl_BalanceWhite;
+        private System.Windows.Forms.Label lbl_Gain;
+        private System.Windows.Forms.Label lbl_ExposureTime;
+        private System.Windows.Forms.NumericUpDown num_BalanceWhite;
         private System.Windows.Forms.NumericUpDown num_CamExposureUs;
-        private System.Windows.Forms.Label lbl_CamGiain;
-        private System.Windows.Forms.Label lbl_CamExposureUs;
+        private System.Windows.Forms.Label lbl_Rio;
+        private System.Windows.Forms.Label lbl_AcquisitionMode;
         private System.Windows.Forms.CheckBox chk_AutoExposureDefault;
+        private System.Windows.Forms.Label lbl_PixelFormat;
+        private System.Windows.Forms.Label lbl_ReConnection;
+        private System.Windows.Forms.NumericUpDown nud_Gain;
+        private System.Windows.Forms.NumericUpDown nud_ExposureTime;
+        private System.Windows.Forms.ComboBox cmb_TriggerMode;
+        private System.Windows.Forms.ComboBox cmb_Rio;
+        private System.Windows.Forms.NumericUpDown nud_ReConnection;
+        private System.Windows.Forms.ComboBox cmb_PixelFormat;
     }
 }

@@ -17,8 +17,15 @@ namespace MultiSerVIsion.Solution.Domain.Contexts
 
         public void SetOnlineCamera(CameraDeviceDto dto)
         {
-            CurrentDeviceId = dto.Model;
             CurrentOnlineCamera = dto;
+            if (dto == null)
+            {
+                CurrentDeviceId = null;
+                IsCurrentDeviceConnected = false;
+                return;
+            }
+            // 在线设备无实体ID，用序列号作为会话标识（与驱动按序列号管理一致）
+            CurrentDeviceId = string.IsNullOrWhiteSpace(dto.SerialNumber) ? dto.Model : dto.SerialNumber;
             IsCurrentDeviceConnected = false; // 选中默认未连接
         }
 
@@ -26,7 +33,10 @@ namespace MultiSerVIsion.Solution.Domain.Contexts
         {
             CurrentDeviceId = deviceId;
             CurrentOnlineCamera = null;
-            IsCurrentDeviceConnected = entity.DetailStatus == CameraStatus.Connected;
+            // Connected/Streaming 均视为已连接，避免采流中无法断开
+            IsCurrentDeviceConnected = entity != null
+                && (entity.DetailStatus == CameraStatus.Connected
+                    || entity.DetailStatus == CameraStatus.Streaming);
         }
 
         public void ClearSelection()

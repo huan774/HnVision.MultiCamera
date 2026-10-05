@@ -413,11 +413,11 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             int height = (int)frameInfo.stFrameInfo.nHeight;
             var srcPixel = frameInfo.stFrameInfo.enPixelType;
 
-            // 单色 → Mono8（1 字节/像素），彩色 → RGB24（3 字节/像素）
+            // 单色 → Mono8（1 字节/像素）；彩色 → BGR8（3 字节/像素，与 GDI+ 24bpp 内存顺序一致）
             bool isMono = IsMonoPixel(srcPixel);
             var dstPixel = isMono
                 ? MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8
-                : MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed;
+                : MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed;
             int bytesPerPixel = isMono ? 1 : 3;
             int dstSize = width * height * bytesPerPixel;
 
@@ -427,8 +427,9 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             var convertParam = new MyCamera.MV_PIXEL_CONVERT_PARAM();
             convertParam.nWidth = frameInfo.stFrameInfo.nWidth;
             convertParam.nHeight = frameInfo.stFrameInfo.nHeight;
-           /* convertParam.pSrcBuffer = frameInfo.pBufAddr;
-            convertParam.nSrcBufferLen = frameInfo.stFrameInfo.nFrameLen;*/
+            // 源缓冲必须显式指定，否则 MV_CC_ConvertPixelType_NET 必然失败（此前被注释，导致转换始终失败并回退原始数据）
+            convertParam.pSrcData = frameInfo.pBufAddr;
+            convertParam.nSrcDataLen = frameInfo.stFrameInfo.nFrameLen;
             convertParam.enSrcPixelType = srcPixel;
             convertParam.enDstPixelType = dstPixel;
             convertParam.pDstBuffer = ctx.ConvertBuffer;
@@ -458,7 +459,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             {
                 Width = width,
                 Height = height,
-                PixelFormat = isMono ? PixelFormatEnum.Mono8 : PixelFormatEnum.RGB24,
+                PixelFormat = isMono ? PixelFormatEnum.Mono8 : PixelFormatEnum.BGR24,
                 Data = data,
                 Timestamp = timestamp,
                 FrameId = frameInfo.stFrameInfo.nFrameNum

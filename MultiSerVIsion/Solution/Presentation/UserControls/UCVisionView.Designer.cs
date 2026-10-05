@@ -191,6 +191,7 @@
             this.PitCamera1.Location = new System.Drawing.Point(3, 51);
             this.PitCamera1.Name = "PitCamera1";
             this.PitCamera1.Size = new System.Drawing.Size(1133, 620);
+            this.PitCamera1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.PitCamera1.TabIndex = 6;
             this.PitCamera1.TabStop = false;
             // 

@@ -24,7 +24,6 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
 {
     public class DeviceTressPresenter:BasePresenter
     {
-      
         private readonly IDeviceTreeView _view;
         private readonly IDeviceAppService _appService;
         private readonly ICameraAppService _cameraAppService;
@@ -54,17 +53,19 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
         }
         public override void Init()
         {
-          /*  _view.DeviceNodeSelected += OnDeviceSelected;*/
             _view.ConfigDeviceSelected += OnConfigDeviceSelected;
             _view.NoDeviceSelected += OnNoDeviceSelected;
             _view.OnlineDeviceSelected += OnOnlineDeviceSelected;
 
-            _view.AddDeviceRequest += OnAddDeviceRequest;
+          
             _view.RemoveDeviceRequest += OnRemoveDeviceRequest;
             _view.CopyDeviceRequest += OnCopyDeviceRequest;
             _view.ToggleDeviceEnableRequest += OnToggleDeviceEnableRequest;
             _view.ViewLoaded += OnViewLoaded;
+
             _view.AddToConfigRequsted += () => AddSelectedCameraToConfig();
+            _view.AddDeviceRequest += OnAddDeviceRequest;
+
             _view.RefreshSearchRequested += async () => await SearchOnlineCameras();
             // 初始化加载设备树
            /* RefreshTree();*/

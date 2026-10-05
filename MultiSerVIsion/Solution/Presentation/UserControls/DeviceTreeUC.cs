@@ -18,7 +18,6 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
 {
     public partial class DeviceTreeUC : BaseViewUc,IDeviceTreeView
     {
-        private Func<string, bool> GetDeviceEnableStatus {  get; set; }
         public Func<string,(bool Enable,bool Online)> GetDeviceStatus {  get; set; }
 
         public event Action AddToConfigRequsted;
@@ -239,10 +238,15 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 tsmi_EnableDisable.Text = enable ? "禁用设备" : "启动设备";
             }
         }
+        /// <summary>
+        /// 「添加设备」按钮：将局域网搜索到的在线相机添加到组态配置。
+        /// 【职责】组态是设备正式连接的前置条件——只有先组态（落库）的相机才能走标准连接流程；
+        /// 与右键菜单「添加子设备」（手动新增空白设备）职责不同，不可混用。
+        /// </summary>
         private void Btn_AddDevice_Click(object sender, EventArgs e)
         {
+            // 仅执行「在线相机 → 组态」流程，不再触发手动新增设备对话框
             AddToConfigRequsted?.Invoke();
-            RaiseAddDevice();
         }
         private void Btn_DelDevice_Click(object sender, EventArgs e)
         {
@@ -355,21 +359,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 onlineGroup.Nodes.Add(node);
             }
             onlineGroup.Expand();
-            /* // BindOnlineCameraTree 里判断一下序列号是否已存在
-             var existSerials = _deviceManager.GetDevices<CameraDeviceEntity>()
-                 .Select(c => c.CameraConfig.ConnectConfig.SerialNumber)
-                 .ToHashSet();
-
-             foreach (var cam in onlineCameras)
-             {
-                 bool isAdded = existSerials.Contains(cam.SerialNumber);
-                 var node = new TreeNode(isAdded ? $"{cam.Model} [已添加]" : $"{cam.Model} [{cam.IpAddress}]")
-                 {
-                     Tag = cam,
-                     ForeColor = isAdded ? Color.Green : Color.Gray,
-                     Enabled = !isAdded // 已添加的禁止重复点击添加
-                 };
-                 onlineGroup.Nodes.Add(node);*/
+           
         }
             
         public void RemoveTreeNode(string devid)
@@ -496,5 +486,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 }
             }
         }
+
+     
     }
 }

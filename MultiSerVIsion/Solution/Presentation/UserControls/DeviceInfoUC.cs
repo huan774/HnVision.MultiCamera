@@ -33,7 +33,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         public void ShowOnlineCameraInfo(CameraDeviceDto dto)
         {
             lbl_DeviceType.Text = "相机（在线未添加）";
-           /* lbl_DeviceName.Text = dto.;*/
+            lbl_DeviceName.Text = dto.DeviceName;
             lbl_Serial.Text = dto.SerialNumber;
             lbl_Interface.Text = dto.InterfaceType.ToString();
             lbl_ip.Text = dto.IpAddress;
@@ -46,7 +46,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             lbl_DeviceName.Text = entity.DeviceName;
             lbl_HardwareModel.Text = entity.CameraAllConfig.ConnectConfig.Model;
             lbl_Serial.Text = entity.CameraAllConfig.ConnectConfig.SerialNumber;
-        /*    lbl_ip.Text = entity.CameraAllConfig.ConnectConfig.IpAddress.ToString();*/
+           /* lbl_ip.Text = entity.CameraAllConfig.ConnectConfig.IpAddress.ToString();*/
             lbl_HardwareModel.Text = entity.CameraAllConfig.ConnectConfig.InterfaceType;
         }
 
@@ -64,6 +64,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         {
             switch (status)
             {
+                case CameraStatus.Idle:              // 新建设备初始状态，尚未连接，可连接
                 case CameraStatus.Disconnected:
                    /* lbl_DeviceLight.BackColor = Color.Red;*/
                     btn_Connect.Visible = true;
@@ -85,9 +86,6 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             MessageBox.Show(message);
         }
 
-        private void btn_Connect_Click(object sender, EventArgs e)
-        {
-
-        }
+       
     }
 }

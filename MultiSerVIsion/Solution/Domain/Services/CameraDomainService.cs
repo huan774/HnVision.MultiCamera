@@ -38,6 +38,7 @@ namespace MultiSerVIsion.Solution.Domain.Services
                         return OperationResult.Fail("设备已处于连接/采流状态，无需重复连接");
                     case CameraStatus.Fault:
                         return OperationResult.Fail("设备处于故障状态，请先复位后再尝试连接");
+                    case CameraStatus.Idle:
                     case CameraStatus.Disconnected:
                     case CameraStatus.Offline:
                         return OperationResult.Succes();
@@ -163,8 +164,9 @@ namespace MultiSerVIsion.Solution.Domain.Services
 
                 if (isConnected)
                 {
-                    // 连接成功：从断开/离线转为已连接
-                    if (device.DetailStatus == CameraStatus.Disconnected ||
+                    // 连接成功：从空闲/断开/离线/故障转为已连接
+                    if (device.DetailStatus == CameraStatus.Idle ||
+                        device.DetailStatus == CameraStatus.Disconnected ||
                         device.DetailStatus == CameraStatus.Offline ||
                         device.DetailStatus == CameraStatus.Fault)
                     {

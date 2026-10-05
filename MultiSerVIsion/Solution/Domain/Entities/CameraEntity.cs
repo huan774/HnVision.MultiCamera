@@ -16,6 +16,12 @@ namespace MultiSerVIsion.Solution.Domain.Entities
         public CameraAllConfig CameraAllConfig { get; set; }= new CameraAllConfig();
 
      
+        /// <summary>
+        /// 相机详细运行状态（相机特有：Idle/Connected/Streaming 等）。
+        /// 【职责】由应用层（CameraAppService）在连接/断开/采流时更新，是相机领域状态的权威来源；
+        /// UI 展示直接读取此字段。仅内存态，不序列化到 JSON。
+        /// 与 DeviceContext 会话状态分工不同：此处是领域层真实状态，DeviceContext 只是当前选中设备的会话快照。
+        /// </summary>
         [JsonIgnore]
         public CameraStatus DetailStatus { get; set; } = CameraStatus.Idle;
         public DateTime LastConnectTime {  get; set; }
