@@ -14,6 +14,7 @@
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -95,11 +96,15 @@
     <Compile Include="Solution\Application\DeviceAppService.cs" />
     <Compile Include="Solution\Domain\Contexts\DeviceContext.cs" />
     <Compile Include="Solution\Domain\Contexts\IDeviceContext.cs" />
+    <Compile Include="Solution\Domain\Entities\Configs\ParamSpec.cs" />
     <Compile Include="Solution\Domain\Events\DeviceConnectedEvent.cs" />
     <Compile Include="Solution\Domain\Models\CameraDeviceDto.cs" />
     <Compile Include="Solution\Domain\Models\CameraFrame.cs" />
+    <Compile Include="Solution\Domain\Models\ParamReadResult.cs" />
     <Compile Include="Solution\Infrastructure\Events\EventBus.cs" />
     <Compile Include="Solution\Infrastructure\Events\IEventBus.cs" />
+    <Compile Include="Solution\Infrastructure\HiKHardware\HikDescriptor.cs" />
+    <Compile Include="Solution\Infrastructure\HiKHardware\HikParamName.cs" />
     <Compile Include="Solution\Presentation\Dtos\CameraDisplayDto.cs" />
     <Compile Include="Solution\Domain\Models\CameraRuntimeStateDto.cs" />
     <Compile Include="Solution\Application\Dtos\DeviceCreateInput.cs" />
@@ -132,11 +137,9 @@
     <Compile Include="Solution\Presentation\Events\DeviceConnectionChangedEveent.cs" />
     <Compile Include="Solution\Presentation\Events\ConfigDeviceSelectedEvent.cs" />
     <Compile Include="Solution\Presentation\Events\DeviceSelectionClearedEvent.cs" />
+    <Compile Include="Solution\Presentation\Factor\DeviceDetailPresenterFactory.cs" />
     <Compile Include="Solution\Presentation\Factor\DeviceInfoPresenterFactory.cs" />
     <Compile Include="Solution\Presentation\Factor\DeviceTreePresenterFactory.cs" />
-    <Compile Include="Solution\Presentation\Factor\IDeviceInfoPresenterFactory.cs" />
-    <Compile Include="Solution\Presentation\Factor\IDeviceTreePresenterFactory.cs" />
-    <Compile Include="Solution\Presentation\Factor\IVisonPresenterFactor.cs" />
     <Compile Include="Solution\Presentation\Factor\VisionPresenterFactory.cs" />
     <Compile Include="Solution\Presentation\Presenter\BasePresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\DeviceDetailPresenter.cs" />
@@ -215,6 +218,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <EmbeddedResource Include="Solution\Presentation\UserControls\CameraDateilUC.resx">
       <DependentUpon>CameraDateilUC.cs</DependentUpon>

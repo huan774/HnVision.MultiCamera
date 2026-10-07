@@ -66,7 +66,7 @@ namespace MultiSerVIsion
             services.AddSingleton<IVisonPresenterFactor, VisionPresenterFactory>();
             services.AddSingleton<IDeviceTreePresenterFactory, DeviceTreePresenterFactory>();
             services.AddSingleton<IDeviceInfoPresenterFactory, DeviceInfoPresenterFactory>();
-           /* services.AddSingleton<IDeviceDetailPresenterFactory, Solution.Presentation.Factor.DeviceDetailPresenterFactory>();*/
+            services.AddSingleton<IDeviceDetailPresenterFactory, DeviceDetailPresenterFactory>();
 
             // 注册视图实现（UserControl）供构造函数注入使用，按窗体生命周期使用瞬时（每次解析新实例）
             services.AddTransient<Solution.Presentation.Views.IDeviceDatailView, Solution.Presentation.UserControls.CameraDateilUC>();

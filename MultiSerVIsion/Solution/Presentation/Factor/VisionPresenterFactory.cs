@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 
 namespace MultiSerVIsion.Solution.Presentation.Factor
 {
+    public interface IVisonPresenterFactor
+    {
+        VisionPreseter Create(IVisionView view);
+    }
     public class VisionPresenterFactory:IVisonPresenterFactor
     {
         private readonly ICameraAppService _cameraAppService;

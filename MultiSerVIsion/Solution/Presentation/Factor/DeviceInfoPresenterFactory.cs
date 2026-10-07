@@ -13,6 +13,15 @@ using System.Windows.Forms;
 
 namespace MultiSerVIsion.Solution.Presentation.Factor
 {
+    public interface IDeviceInfoPresenterFactory
+    {
+        /// <summary>
+        /// 创建设备信息Presenter
+        /// </summary>
+        /// <param name="view">设备信息视图实例（UI层传入）</param>
+        /// <returns>装配完成的Presenter</returns>
+        DeviceInfoPresenter Create(IDeviceInfoParamView view);
+    }
     public class DeviceInfoPresenterFactory:IDeviceInfoPresenterFactory
     {
         // 固定依赖：由DI容器自动注入

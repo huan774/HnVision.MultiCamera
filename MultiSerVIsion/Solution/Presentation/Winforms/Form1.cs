@@ -40,8 +40,13 @@ namespace MultiSerVIsion
         private readonly IDeviceAppService _deviceAppService;//设备管理服务接口
         private readonly ICameraAppService _cameraAppService;//海康相机服务接口
         private readonly IVisonPresenterFactor _visionPresenterFactory;
-       
-      //构造注入服务
+        private readonly IDeviceDetailPresenterFactory _deviceDetailPresenterFactory;
+
+        // 参数面板视图与 Presenter：全生命周期唯一，保证「Presenter 写入的实例」就是「界面显示的实例」
+        private  IDeviceDatailView _deviceDetailView;
+        private DeviceDetailPresenter _deviceDetailPresenter;
+
+        //构造注入服务
         public Form1(
             IEventBus eventBus,
             IVisonPresenterFactor visionPresenterFactory,
@@ -49,12 +54,14 @@ namespace MultiSerVIsion
             ICameraAppService cameraAppService,
             IDeviceInfoPresenterFactory devicePresenterFactory,
             IDeviceTreePresenterFactory deviceTreePresenterFactory,
+            IDeviceDetailPresenterFactory deviceDetailPresenterFactory,
              Solution.Domain.Contexts.IDeviceContext deviceContext)
         {
           
             _eventBus = eventBus;
             _deviceinfoPresenterFactory = devicePresenterFactory;
             _deviceTreePresenterFactory = deviceTreePresenterFactory;
+            _deviceDetailPresenterFactory = deviceDetailPresenterFactory;
             _deviceAppService= deviceAppService;
             _cameraAppService= cameraAppService;
             _visionPresenterFactory=visionPresenterFactory;
@@ -75,13 +82,12 @@ namespace MultiSerVIsion
         {
 
             IDeviceTreeView treeView = new DeviceTreeUC();
-           
-
             IDeviceInfoParamView deviceInfo = new DeviceInfoUC();
             IVisionView visionView = new UCVisionView();
 
-
-
+            // 参数面板只创建一个视图实例，并让 Presenter 绑定到该实例
+            _deviceDetailView = new CameraDateilUC();
+            _deviceDetailPresenter = _deviceDetailPresenterFactory.Create(_deviceDetailView);
             var Treepresenter = _deviceTreePresenterFactory.Create(treeView);
             var infopresenter = _deviceinfoPresenterFactory.Create(deviceInfo);
 
@@ -90,11 +96,42 @@ namespace MultiSerVIsion
         }
 
 
-        private void OnDeviceConnectionChanged(DeviceConnectionChangedEveent e)
+        /// <summary>
+        /// 设备连接状态变化：连接后展开右侧参数面板并回填当前设备参数，断开后收起。
+        /// 【关键】必须复用 InitPresent 中创建的唯一视图实例，
+        /// 否则会 new 出第二个视图，导致 Presenter 回填的值只写进了不可见的那个实例。
+        /// </summary>
+        private async void OnDeviceConnectionChanged(DeviceConnectionChangedEveent e)
         {
-            IDeviceDatailView detailView = new CameraDateilUC();
-            split_inter.SplitterDistance = 685;
-            split_inter.Panel2.Controls.Add(detailView as CameraDateilUC);
+            if (e == null) return;
+
+            if (e.IsConnected)
+            {
+                split_inter.SplitterDistance = 685;
+                ShowDeviceDetailView();
+
+                // 连接成功后才具备读参条件，此时按当前设备回填参数面板
+                if (_deviceDetailPresenter != null)
+                {
+                    await _deviceDetailPresenter.LoadDeviceParamsAsync(_deviceContext.CurrentDeviceId);
+                }
+            }
+            else
+            {
+                split_inter.SplitterDistance = 1121;
+            }
+        }
+
+        /// <summary>把唯一的参数面板实例挂载到右侧面板（重复调用不会重复挂载）</summary>
+        private void ShowDeviceDetailView()
+        {
+            var view = _deviceDetailView as CameraDateilUC;
+            if (view == null) return;
+            if (view.Parent == split_inter.Panel2) return;
+
+            split_inter.Panel2.Controls.Clear();
+            view.Dock = DockStyle.Fill;
+            split_inter.Panel2.Controls.Add(view);
         }
         private void OnDeviceSelectedSwitchTab(ConfigDeviceSelectedEvent e)
         {

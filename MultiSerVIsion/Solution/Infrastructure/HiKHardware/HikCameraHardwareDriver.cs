@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -312,22 +313,8 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             {
                 ctx.FrameCallback = frameCallback;
 
-                // 主动取流：开启 SDK 采集
-                int ret = ctx.CameraObj.MV_CC_StartGrabbing_NET();
-                if (ret != MV_OK)
-                    return OperationResult.Fail($"开启采集失败：{GetErrorMessage(ret)}");
-
-                // 启动主动取流线程（GetImageBuffer 轮询）
-                ctx.IsGrabbing = true;
-                ctx.GrabThread = new Thread(GrabThreadProcess)
-                {
-                    IsBackground = true,
-                    Name = $"CameraGrab_{serialNumber}",
-                    Priority = ThreadPriority.AboveNormal
-                };
-                ctx.GrabThread.Start(ctx);
-
-                return OperationResult.Succes();
+                // 主动取流：开启 SDK 采集并启动取流线程（与参数配置的恢复逻辑共用 BeginGrab）
+                return BeginGrab(ctx, serialNumber);
             }
             catch (Exception ex)
             {
@@ -472,6 +459,450 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             return pixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8
                 || pixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono10
                 || pixelType == MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono12;
+        }
+
+        // ==================== 参数配置（通用参数读写：覆盖高频与基础参数） ====================
+
+        /// <summary>
+        /// 读取指定参数当前值。
+        /// 【说明】已登记参数按描述符类型读取；未登记参数按「浮点 → 整型 → 枚举 → 布尔」顺序探测。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号</param>
+        /// <param name="paramName">参数节点名（如 ExposureTime）</param>
+        /// <returns>成功时 Data 为当前值（double / long / string / bool）</returns>
+        public async Task<OperationResult<object>> GetParamAsync(string serialNumber, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(paramName))
+                return OperationResult<object>.Fail("参数名不能为空");
+            if (!TryGetContext(serialNumber, out var ctx))
+                return OperationResult<object>.Fail("设备未连接，请先连接后再读取参数");
+
+            return await Task.Run(() =>
+            {
+                var cam = ctx.CameraObj;
+                var descriptor = HikDescriptor.Find(paramName);
+
+                if (descriptor != null)
+                {
+                    // 已登记参数：严格按描述符类型读取，避免误判节点类型；顺带回填范围/步长/可选项
+                    return TryReadParam(cam, descriptor, out var registeredValue)
+                        ? OperationResult<object>.Succes(registeredValue)
+                        : OperationResult<object>.Fail($"读取参数失败：{paramName}");
+                }
+
+                // 未登记参数：依次探测，返回首个读取成功的类型
+                if (TryReadFloat(cam, paramName, out var probeFloat, out _, out _))
+                    return OperationResult<object>.Succes((object)probeFloat);
+                if (TryReadInt(cam, paramName, out var probeInt, out _, out _, out _))
+                    return OperationResult<object>.Succes((object)probeInt);
+                if (TryReadEnumSymbolic(cam, paramName, out var probeSymbol))
+                    return OperationResult<object>.Succes((object)probeSymbol);
+                if (TryReadBool(cam, paramName, out var probeBool))
+                    return OperationResult<object>.Succes((object)probeBool);
+
+                return OperationResult<object>.Fail($"不支持的参数：{paramName}");
+            });
+        }
+
+        /// <summary>
+        /// 写入指定参数。
+        /// 【说明】按值的运行期类型选择 SDK 写入方式；基础参数节点要求停止采集，故内部自动暂停并恢复。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号</param>
+        /// <param name="paramName">参数节点名</param>
+        /// <param name="value">待写入值（double/float、整型、bool 或枚举符号字符串）</param>
+        public async Task<OperationResult> SetParamAsync(string serialNumber, string paramName, object value)
+        {
+            if (string.IsNullOrWhiteSpace(paramName))
+                return OperationResult.Fail("参数名不能为空");
+            if (value == null)
+                return OperationResult.Fail("参数值不能为空");
+            if (!TryGetContext(serialNumber, out var ctx))
+                return OperationResult.Fail("设备未连接，请先连接后再配置参数");
+
+            return await Task.Run(() =>
+            {
+                var cam = ctx.CameraObj;
+                var descriptor = HikDescriptor.Find(paramName);
+
+                // 基础参数多数节点要求停止采集后才可写，故先暂停、写完恢复
+                bool needPause = descriptor != null && descriptor.Group == HikParamGroup.Basic;
+                bool paused = needPause && PauseGrab(ctx);
+                try
+                {
+                    int ret = WriteNode(cam, paramName, descriptor, value);
+                    return ret == MV_OK
+                        ? OperationResult.Succes()
+                        : OperationResult.Fail($"参数 {paramName} 写入失败：{GetErrorMessage(ret)}");
+                }
+                finally
+                {
+                    if (paused) ResumeGrab(ctx, serialNumber);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 查询指定参数的元信息（取值范围、可写性、枚举项），供界面生成可调节项。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号</param>
+        /// <param name="paramName">参数节点名</param>
+        /// <returns>成功时返回已回填范围与枚举项的描述符</returns>
+        public async Task<OperationResult<HikDescriptor>> GetParamDescriptorAsync(string serialNumber, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(paramName))
+                return OperationResult<HikDescriptor>.Fail("参数名不能为空");
+            if (!TryGetContext(serialNumber, out var ctx))
+                return OperationResult<HikDescriptor>.Fail("设备未连接，请先连接后再查询参数");
+
+            return await Task.Run(() =>
+            {
+                var cam = ctx.CameraObj;
+                // 未登记参数按浮点型描述符占位，便于上层先展示再探测
+                var descriptor = HikDescriptor.Find(paramName)
+                                 ?? new HikDescriptor(paramName, HikParamGroup.Basic,
+                                        HikParamValueType.Float, paramName);
+
+                // 从相机回填取值范围与枚举项；节点不存在时保持默认，不影响描述符可用性
+                switch (descriptor.ValueType)
+                {
+                    case HikParamValueType.Float:
+                        if (TryReadFloat(cam, paramName, out _, out var fmin, out var fmax))
+                        {
+                            descriptor.Min = fmin;
+                            descriptor.Max = fmax;
+                        }
+                        break;
+
+                    case HikParamValueType.Int:
+                        if (TryReadInt(cam, paramName, out _, out var imin, out var imax, out var istep))
+                        {
+                            descriptor.Min = imin;
+                            descriptor.Max = imax;
+                            descriptor.Step = istep;
+                        }
+                        break;
+
+                    case HikParamValueType.Enum:
+                        descriptor.EnumEntries = ReadEnumEntries(cam, paramName);
+                        break;
+                }
+
+                return OperationResult<HikDescriptor>.Succes(descriptor);
+            });
+        }
+
+        /// <summary>获取已连接相机的采集上下文</summary>
+        /// <param name="serialNumber">相机序列号</param>
+        /// <param name="ctx">输出：采集上下文</param>
+        /// <returns>设备已连接时返回 true</returns>
+        private bool TryGetContext(string serialNumber, out CameraGrabContext ctx)
+        {
+            ctx = null;
+            if (string.IsNullOrWhiteSpace(serialNumber)) return false;
+            return _cameraContexts.TryGetValue(serialNumber, out ctx);
+        }
+
+        /// <summary>按值的运行期类型选择 SDK 写入方式</summary>
+        /// <returns>SDK 返回码（MV_OK 表示成功）</returns>
+        private static int WriteNode(MyCamera cam, string nodeName, HikDescriptor descriptor, object value)
+        {
+            // 枚举符号字符串：用符号名写入，规避各机型枚举值不一致的问题
+            if (value is string symbol)
+                return cam.MV_CC_SetEnumValueByString_NET(nodeName, symbol);
+
+            if (value is bool boolValue)
+                return cam.MV_CC_SetBoolValue_NET(nodeName, boolValue);
+
+            if (value is float || value is double || value is decimal)
+            {
+                // 帧率节点受使能开关控制，写入前先使能
+                if (descriptor != null
+                    && string.Equals(descriptor.ParamName, HikParamName.AcquisitionFrameRate, StringComparison.Ordinal))
+                {
+                    cam.MV_CC_SetBoolValue_NET(HikParamName.AcquisitionFrameRateEnable, true);
+                }
+                return cam.MV_CC_SetFloatValue_NET(nodeName, Convert.ToSingle(value));
+            }
+
+            // 整型：枚举型按枚举值写入，其余按整型写入
+            uint intValue = Convert.ToUInt32(value);
+            return descriptor != null && descriptor.ValueType == HikParamValueType.Enum
+                ? cam.MV_CC_SetEnumValue_NET(nodeName, intValue)
+                : cam.MV_CC_SetIntValue_NET(nodeName, intValue);
+        }
+
+        /// <summary>读取浮点节点当前值与允许范围</summary>
+        private static bool TryReadFloat(MyCamera cam, string nodeName,
+            out double value, out double min, out double max)
+        {
+            value = 0;
+            min = 0;
+            max = 0;
+            if (cam == null) return false;
+
+            // 定长数组字段必须按 MarshalAs(SizeConst) 预分配，否则非托管封送会失败
+            var stValue = new MyCamera.MVCC_FLOATVALUE { nReserved = new uint[4] };
+            if (cam.MV_CC_GetFloatValue_NET(nodeName, ref stValue) != MV_OK) return false;
+
+            value = stValue.fCurValue;
+            min = stValue.fMin;
+            max = stValue.fMax;
+            return true;
+        }
+
+        /// <summary>读取整型节点当前值、允许范围与最小步长</summary>
+        private static bool TryReadInt(MyCamera cam, string nodeName,
+            out long value, out double min, out double max, out double step)
+        {
+            value = 0;
+            min = 0;
+            max = 0;
+            step = 0;
+            if (cam == null) return false;
+
+            var stValue = new MyCamera.MVCC_INTVALUE { nReserved = new uint[4] };
+            if (cam.MV_CC_GetIntValue_NET(nodeName, ref stValue) != MV_OK) return false;
+
+            value = stValue.nCurValue;
+            min = stValue.nMin;
+            max = stValue.nMax;
+            // nInc 为相机声明的最小步长，是界面步进与实体校验的共同依据
+            step = stValue.nInc;
+            return true;
+        }
+
+        /// <summary>读取布尔节点当前值</summary>
+        private static bool TryReadBool(MyCamera cam, string nodeName, out bool value)
+        {
+            value = false;
+            if (cam == null) return false;
+
+            bool result = false;
+            if (cam.MV_CC_GetBoolValue_NET(nodeName, ref result) != MV_OK) return false;
+
+            value = result;
+            return true;
+        }
+
+        /// <summary>读取枚举节点当前的符号名（如 Mono8 / Off / Software）</summary>
+        private static bool TryReadEnumSymbolic(MyCamera cam, string nodeName, out string symbol)
+        {
+            symbol = null;
+            if (cam == null) return false;
+
+            if (!TryGetEnumValue(cam, nodeName, out var stEnum)) return false;
+
+            var stEntry = new MyCamera.MVCC_ENUMENTRY
+            {
+                nValue = stEnum.nCurValue,
+                chSymbolic = new byte[64],
+                nReserved = new uint[4]
+            };
+            if (cam.MV_CC_GetEnumEntrySymbolic_NET(nodeName, ref stEntry) != MV_OK) return false;
+
+            symbol = DecodeSymbolic(stEntry.chSymbolic);
+            return !string.IsNullOrEmpty(symbol);
+        }
+
+        /// <summary>读取枚举节点支持的全部符号名（供界面生成下拉项）</summary>
+        private static List<string> ReadEnumEntries(MyCamera cam, string nodeName)
+        {
+            var entries = new List<string>();
+            if (!TryGetEnumValue(cam, nodeName, out var stEnum)) return entries;
+
+            // 相机上报的支持个数可能超过缓冲上限，需按 SizeConst 截断
+            uint count = Math.Min(stEnum.nSupportedNum, (uint)stEnum.nSupportValue.Length);
+            for (uint i = 0; i < count; i++)
+            {
+                var stEntry = new MyCamera.MVCC_ENUMENTRY
+                {
+                    nValue = stEnum.nSupportValue[i],
+                    chSymbolic = new byte[64],
+                    nReserved = new uint[4]
+                };
+                if (cam.MV_CC_GetEnumEntrySymbolic_NET(nodeName, ref stEntry) != MV_OK) continue;
+
+                var symbol = DecodeSymbolic(stEntry.chSymbolic);
+                if (!string.IsNullOrEmpty(symbol)) entries.Add(symbol);
+            }
+            return entries;
+        }
+
+        /// <summary>读取枚举节点的原始枚举值</summary>
+        private static bool TryGetEnumValue(MyCamera cam, string nodeName, out MyCamera.MVCC_ENUMVALUE stEnum)
+        {
+            stEnum = new MyCamera.MVCC_ENUMVALUE
+            {
+                nSupportValue = new uint[64],
+                nReserved = new uint[4]
+            };
+            if (cam == null) return false;
+            return cam.MV_CC_GetEnumValue_NET(nodeName, ref stEnum) == MV_OK;
+        }
+
+        /// <summary>按 C 字符串（'\0' 结尾）解码 SDK 返回的定长字节数组</summary>
+        private static string DecodeSymbolic(byte[] raw)
+        {
+            if (raw == null || raw.Length == 0) return null;
+
+            int length = Array.IndexOf(raw, (byte)0);
+            if (length < 0) length = raw.Length;
+            return Encoding.ASCII.GetString(raw, 0, length).Trim();
+        }
+
+        /// <summary>暂停取流（仅在实际采流时执行）</summary>
+        /// <returns>确实执行了暂停时返回 true，用于决定是否需要恢复</returns>
+        private static bool PauseGrab(CameraGrabContext ctx)
+        {
+            if (ctx == null || !ctx.IsGrabbing) return false;
+
+            ctx.IsGrabbing = false;
+            JoinGrabThread(ctx);
+            ctx.CameraObj?.MV_CC_StopGrabbing_NET();
+            return true;
+        }
+
+        /// <summary>恢复取流：仅在存在帧回调时执行（参数配置完成后调用）</summary>
+        private void ResumeGrab(CameraGrabContext ctx, string serialNumber)
+        {
+            if (ctx?.FrameCallback == null) return;
+            BeginGrab(ctx, serialNumber);
+        }
+
+        /// <summary>开启 SDK 采集并启动取流线程（StartStreamAsync 与参数配置恢复共用）</summary>
+        private OperationResult BeginGrab(CameraGrabContext ctx, string serialNumber)
+        {
+            int ret = ctx.CameraObj.MV_CC_StartGrabbing_NET();
+            if (ret != MV_OK)
+                return OperationResult.Fail($"开启采集失败：{GetErrorMessage(ret)}");
+
+            ctx.IsGrabbing = true;
+            ctx.GrabThread = new Thread(GrabThreadProcess)
+            {
+                IsBackground = true,
+                Name = $"CameraGrab_{serialNumber}",
+                Priority = ThreadPriority.AboveNormal
+            };
+            ctx.GrabThread.Start(ctx);
+            return OperationResult.Succes();
+        }
+
+        /// <summary>
+        /// 读取参数：一次性返回「当前值 + 完整规格（范围 / 步长 / 可选项 / 可写性）」。
+        /// 【设计】描述符一律先复制再回填，避免多相机/多次读取互相覆盖全局参数目录。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号</param>
+        /// <param name="paramName">参数节点名</param>
+        /// <returns>成功时 Data 为已回填规格且含 CurrentValue 的描述符</returns>
+        public async Task<OperationResult<HikDescriptor>> ReadParamAsync(string serialNumber, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(paramName))
+                return OperationResult<HikDescriptor>.Fail("参数名不能为空");
+            if (!TryGetContext(serialNumber, out var ctx))
+                return OperationResult<HikDescriptor>.Fail("设备未连接，请先连接后再读取参数");
+
+            return await Task.Run(() =>
+            {
+                var cam = ctx.CameraObj;
+
+                // Find 返回副本，未登记参数再按类型探测，保证不会污染全局目录
+                var descriptor = ResolveDescriptor(cam, paramName);
+                if (descriptor == null)
+                    return OperationResult<HikDescriptor>.Fail($"不支持的参数：{paramName}");
+
+                if (!TryReadParam(cam, descriptor, out var currentValue))
+                    return OperationResult<HikDescriptor>.Fail($"读取参数失败：{paramName}");
+
+                descriptor.CurrentValue = currentValue;
+                return OperationResult<HikDescriptor>.Succes(descriptor);
+            });
+        }
+
+        /// <summary>
+        /// 取得参数描述符：已登记参数用登记类型；未登记参数按「浮点 → 整型 → 枚举 → 布尔」探测真实类型，
+        /// 避免用错误的 SDK API 读取节点而误判。
+        /// </summary>
+        /// <param name="cam">相机句柄</param>
+        /// <param name="paramName">参数节点名</param>
+        /// <returns>可安全回填的描述符副本；节点不存在时返回 null</returns>
+        private static HikDescriptor ResolveDescriptor(MyCamera cam, string paramName)
+        {
+            var registered = HikDescriptor.Find(paramName);
+            if (registered != null) return registered;
+
+            var probe = new HikDescriptor(paramName, HikParamGroup.Basic, HikParamValueType.Float, paramName);
+
+            if (TryReadFloat(cam, paramName, out _, out _, out _)) return probe;
+
+            if (TryReadInt(cam, paramName, out _, out _, out _, out _))
+            {
+                probe.ValueType = HikParamValueType.Int;
+                return probe;
+            }
+
+            if (TryReadEnumSymbolic(cam, paramName, out _))
+            {
+                probe.ValueType = HikParamValueType.Enum;
+                return probe;
+            }
+
+            if (TryReadBool(cam, paramName, out _))
+            {
+                probe.ValueType = HikParamValueType.Bool;
+                return probe;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 按描述符类型读取当前值，并把范围 / 步长 / 可选项回填到描述符。
+        /// </summary>
+        /// <param name="cam">相机句柄</param>
+        /// <param name="descriptor">待回填的描述符</param>
+        /// <param name="currentValue">输出：当前值（double / long / string / bool）</param>
+        /// <returns>读取成功时返回 true</returns>
+        private static bool TryReadParam(MyCamera cam, HikDescriptor descriptor, out object currentValue)
+        {
+            currentValue = null;
+            if (cam == null || descriptor == null) return false;
+
+            switch (descriptor.ValueType)
+            {
+                case HikParamValueType.Float:
+                    if (!TryReadFloat(cam, descriptor.ParamName, out var fvalue, out var fmin, out var fmax))
+                        return false;
+                    descriptor.Min = fmin;
+                    descriptor.Max = fmax;
+                    // SDK 未提供浮点节点步长，Step 保持 0 表示无步长约束
+                    currentValue = fvalue;
+                    return true;
+
+                case HikParamValueType.Int:
+                    if (!TryReadInt(cam, descriptor.ParamName, out var ivalue, out var imin, out var imax, out var istep))
+                        return false;
+                    descriptor.Min = imin;
+                    descriptor.Max = imax;
+                    descriptor.Step = istep;
+                    currentValue = ivalue;
+                    return true;
+
+                case HikParamValueType.Enum:
+                    if (!TryReadEnumSymbolic(cam, descriptor.ParamName, out var symbol))
+                        return false;
+                    descriptor.EnumEntries = ReadEnumEntries(cam, descriptor.ParamName);
+                    currentValue = symbol;
+                    return true;
+
+                case HikParamValueType.Bool:
+                    if (!TryReadBool(cam, descriptor.ParamName, out var bvalue))
+                        return false;
+                    currentValue = bvalue;
+                    return true;
+            }
+
+            return false;
         }
 
         // ==================== 登录（私有，不暴露 SDK 句柄） ====================

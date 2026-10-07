@@ -12,7 +12,7 @@ namespace MultiSerVIsion.Solution.Presentation.Views
 {
     public interface IDeviceInfoParamView
     {
-       /* void ShowDeviceBasicInfo(DeviceEntity deviceEntity, CameraDeviceDto info);*/
+      
         void ClearDeviceInfo();
         void UpdateConnectStatus(CameraStatus status);
         void ShowOnlineCameraInfo(CameraDeviceDto dto);
@@ -21,7 +21,7 @@ namespace MultiSerVIsion.Solution.Presentation.Views
 
         event Action OnConnectClicked;
         event Action OnDisconnectClicked;
-        /*event Action<CameraUiDto> paramValueChanged;*/
+       
         
     }
 }

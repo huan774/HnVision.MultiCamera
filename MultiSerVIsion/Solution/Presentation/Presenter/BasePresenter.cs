@@ -12,11 +12,6 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
     public abstract class BasePresenter
     {
         /// <summary>
-        /// 当前关联的设备ID（可选，全局切换设备时用）
-        /// </summary>
-        public string CurrentDeviceId { get; protected set; }
-
-        /// <summary>
         /// 是否已释放资源
         /// </summary>
         public bool IsDisposed { get; private set; }
@@ -30,23 +25,15 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
         /// 加载指定设备（切换设备时调用，可多次执行）
         /// </summary>
         /// <param name="deviceId">设备唯一标识</param>
-        public virtual void LoadDevice(string deviceId)
-        {
-            CurrentDeviceId = deviceId;
-        }
+     
 
         /// <summary>
         /// 卸载当前设备（切换设备前、关闭页面前调用）
         /// </summary>
         public virtual void UnloadDevice()
         {
-            CurrentDeviceId = string.Empty;
         }
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+       
 
         protected virtual void Dispose(bool disposing)
         {
@@ -61,9 +48,5 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             IsDisposed = true;
         }
 
-        ~BasePresenter()
-        {
-            Dispose(false);
-        }
     }
 }

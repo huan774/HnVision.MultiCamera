@@ -45,5 +45,29 @@ namespace MultiSerVIsion.Solution.Application.Services
 
         /// <summary>停止采流</summary>
         OperationResult StopStream(string deviceId);
+
+        /// <summary>读取参数当前值（仅值，不含规格）</summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <param name="paramName">参数节点名</param>
+        Task<OperationResult<object>> GetParamAsync(string deviceId, string paramName);
+
+        /// <summary>写入参数（成功后由应用层写入实体并落盘）</summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <param name="paramName">参数节点名</param>
+        /// <param name="value">待写入值（double/float、整型、bool 或枚举符号字符串）</param>
+        Task<OperationResult> SetParamAsync(string deviceId, string paramName, object value);
+
+        /// <summary>查询参数元信息（范围/可写性/枚举项）</summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <param name="paramName">参数节点名</param>
+        Task<OperationResult<HikDescriptor>> GetParamDescriptorAsync(string deviceId, string paramName);
+
+        /// <summary>
+        /// 读取参数：一次性返回「当前值 + 完整规格（范围 / 步长 / 可选项）」，供界面限幅与展示。
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <param name="paramName">参数节点名</param>
+        /// <returns>成功时 Data 含已回填的规格与当前值</returns>
+        Task<OperationResult<ParamReadResult>> ReadParamAsync(string deviceId, string paramName);
     }
 }
