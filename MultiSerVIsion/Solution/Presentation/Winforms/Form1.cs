@@ -187,6 +187,10 @@ namespace MultiSerVIsion
                     _presenterCache[tabKey] = visionPresenter;
                     view = visionView;
                     break;
+                case "tabPageAlgorithm":
+                    view = new UCAlgorithmView();
+                    break;
+
             }
 
             // 无对应视图类型的标签页（如占位页）直接跳过

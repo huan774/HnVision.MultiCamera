@@ -55,6 +55,7 @@
             // 
             this.groupBox1.Controls.Add(this.tableLayoutPanel2);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox1.Font = new System.Drawing.Font("宋体", 10.66667F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.groupBox1.Location = new System.Drawing.Point(4, 3);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.groupBox1.Name = "groupBox1";
@@ -110,7 +111,7 @@
             0,
             0});
             this.nud_ExposureTime.Name = "nud_ExposureTime";
-            this.nud_ExposureTime.Size = new System.Drawing.Size(140, 38);
+            this.nud_ExposureTime.Size = new System.Drawing.Size(140, 44);
             this.nud_ExposureTime.TabIndex = 26;
             this.nud_ExposureTime.Value = new decimal(new int[] {
             1000,
@@ -124,7 +125,7 @@
             this.lbl_TriggerSource.Location = new System.Drawing.Point(4, 480);
             this.lbl_TriggerSource.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_TriggerSource.Name = "lbl_TriggerSource";
-            this.lbl_TriggerSource.Size = new System.Drawing.Size(120, 27);
+            this.lbl_TriggerSource.Size = new System.Drawing.Size(147, 33);
             this.lbl_TriggerSource.TabIndex = 18;
             this.lbl_TriggerSource.Text = "采集模式";
             // 
@@ -134,7 +135,7 @@
             this.lbl_TriggerMode.Location = new System.Drawing.Point(4, 360);
             this.lbl_TriggerMode.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_TriggerMode.Name = "lbl_TriggerMode";
-            this.lbl_TriggerMode.Size = new System.Drawing.Size(120, 27);
+            this.lbl_TriggerMode.Size = new System.Drawing.Size(147, 33);
             this.lbl_TriggerMode.TabIndex = 7;
             this.lbl_TriggerMode.Text = "触发模式";
             // 
@@ -144,7 +145,7 @@
             this.lbl_AcquisitionFrameRate.Location = new System.Drawing.Point(4, 240);
             this.lbl_AcquisitionFrameRate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_AcquisitionFrameRate.Name = "lbl_AcquisitionFrameRate";
-            this.lbl_AcquisitionFrameRate.Size = new System.Drawing.Size(120, 27);
+            this.lbl_AcquisitionFrameRate.Size = new System.Drawing.Size(147, 33);
             this.lbl_AcquisitionFrameRate.TabIndex = 6;
             this.lbl_AcquisitionFrameRate.Text = "采集帧率";
             // 
@@ -154,7 +155,7 @@
             this.lbl_Gain.Location = new System.Drawing.Point(4, 120);
             this.lbl_Gain.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_Gain.Name = "lbl_Gain";
-            this.lbl_Gain.Size = new System.Drawing.Size(66, 27);
+            this.lbl_Gain.Size = new System.Drawing.Size(81, 33);
             this.lbl_Gain.TabIndex = 5;
             this.lbl_Gain.Text = "增益";
             // 
@@ -164,7 +165,7 @@
             this.lbl_ExposureTime.Location = new System.Drawing.Point(4, 0);
             this.lbl_ExposureTime.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_ExposureTime.Name = "lbl_ExposureTime";
-            this.lbl_ExposureTime.Size = new System.Drawing.Size(120, 27);
+            this.lbl_ExposureTime.Size = new System.Drawing.Size(147, 33);
             this.lbl_ExposureTime.TabIndex = 4;
             this.lbl_ExposureTime.Text = "曝光时间";
             // 
@@ -178,7 +179,7 @@
             0,
             0});
             this.nud_AcquisitionFrameRate.Name = "nud_AcquisitionFrameRate";
-            this.nud_AcquisitionFrameRate.Size = new System.Drawing.Size(140, 38);
+            this.nud_AcquisitionFrameRate.Size = new System.Drawing.Size(140, 44);
             this.nud_AcquisitionFrameRate.TabIndex = 13;
             this.nud_AcquisitionFrameRate.Value = new decimal(new int[] {
             300,
@@ -191,7 +192,7 @@
             this.cmb_TriggerMode.FormattingEnabled = true;
             this.cmb_TriggerMode.Location = new System.Drawing.Point(378, 363);
             this.cmb_TriggerMode.Name = "cmb_TriggerMode";
-            this.cmb_TriggerMode.Size = new System.Drawing.Size(121, 35);
+            this.cmb_TriggerMode.Size = new System.Drawing.Size(121, 41);
             this.cmb_TriggerMode.TabIndex = 28;
             // 
             // nud_Gain
@@ -204,7 +205,7 @@
             0,
             0});
             this.nud_Gain.Name = "nud_Gain";
-            this.nud_Gain.Size = new System.Drawing.Size(140, 38);
+            this.nud_Gain.Size = new System.Drawing.Size(140, 44);
             this.nud_Gain.TabIndex = 27;
             this.nud_Gain.Value = new decimal(new int[] {
             1000,
@@ -217,7 +218,7 @@
             this.cmb_TriggerSource.FormattingEnabled = true;
             this.cmb_TriggerSource.Location = new System.Drawing.Point(378, 483);
             this.cmb_TriggerSource.Name = "cmb_TriggerSource";
-            this.cmb_TriggerSource.Size = new System.Drawing.Size(121, 35);
+            this.cmb_TriggerSource.Size = new System.Drawing.Size(121, 41);
             this.cmb_TriggerSource.TabIndex = 33;
             // 
             // lbl_PixelFormat
@@ -226,7 +227,7 @@
             this.lbl_PixelFormat.Location = new System.Drawing.Point(4, 600);
             this.lbl_PixelFormat.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbl_PixelFormat.Name = "lbl_PixelFormat";
-            this.lbl_PixelFormat.Size = new System.Drawing.Size(120, 27);
+            this.lbl_PixelFormat.Size = new System.Drawing.Size(147, 33);
             this.lbl_PixelFormat.TabIndex = 24;
             this.lbl_PixelFormat.Text = "像素格式";
             // 
@@ -235,7 +236,7 @@
             this.cmb_PixelFormat.FormattingEnabled = true;
             this.cmb_PixelFormat.Location = new System.Drawing.Point(378, 603);
             this.cmb_PixelFormat.Name = "cmb_PixelFormat";
-            this.cmb_PixelFormat.Size = new System.Drawing.Size(121, 35);
+            this.cmb_PixelFormat.Size = new System.Drawing.Size(121, 41);
             this.cmb_PixelFormat.TabIndex = 30;
             // 
             // tableLayoutPanel1

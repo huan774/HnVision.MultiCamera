@@ -36,6 +36,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="halcondotnet">
+      <HintPath>D:\MVTec\bin\dotnet35\halcondotnet.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.10\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -93,14 +96,22 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Solution\Application\AlgorithmAppService.cs" />
     <Compile Include="Solution\Application\DeviceAppService.cs" />
+    <Compile Include="Solution\Application\Interfaces\IOperatorRegistry.cs" />
+    <Compile Include="Solution\Application\Interfaces\IRecipeValidator.cs" />
     <Compile Include="Solution\Domain\Contexts\DeviceContext.cs" />
     <Compile Include="Solution\Domain\Contexts\IDeviceContext.cs" />
     <Compile Include="Solution\Domain\Entities\Configs\ParamSpec.cs" />
+    <Compile Include="Solution\Domain\Enums\NodeEnums.cs" />
     <Compile Include="Solution\Domain\Events\DeviceConnectedEvent.cs" />
     <Compile Include="Solution\Domain\Models\CameraDeviceDto.cs" />
     <Compile Include="Solution\Domain\Models\CameraFrame.cs" />
+    <Compile Include="Solution\Domain\Models\FlowNodeModel.cs" />
+    <Compile Include="Solution\Domain\Models\OperatorMetadata.cs" />
+    <Compile Include="Solution\Domain\Models\ParameterDefinition.cs" />
     <Compile Include="Solution\Domain\Models\ParamReadResult.cs" />
+    <Compile Include="Solution\Domain\Models\PortDefinition.cs" />
     <Compile Include="Solution\Infrastructure\Events\EventBus.cs" />
     <Compile Include="Solution\Infrastructure\Events\IEventBus.cs" />
     <Compile Include="Solution\Infrastructure\HiKHardware\HikDescriptor.cs" />
@@ -133,6 +144,8 @@
     <Compile Include="Solution\Infrastructure\HiKHardware\HikCameraHardwareDriver.cs" />
     <Compile Include="Solution\Infrastructure\Repository\DeviceManager.cs" />
     <Compile Include="Solution\Infrastructure\Repository\DeviceRepository.cs" />
+    <Compile Include="Solution\Presentation\Events\NodeDropEventArgs.cs" />
+    <Compile Include="Solution\Presentation\Events\NodeRenameEventArgs.cs" />
     <Compile Include="Solution\Presentation\Events\OnlineCameraSelectedEvent.cs" />
     <Compile Include="Solution\Presentation\Events\DeviceConnectionChangedEveent.cs" />
     <Compile Include="Solution\Presentation\Events\ConfigDeviceSelectedEvent.cs" />
@@ -141,6 +154,7 @@
     <Compile Include="Solution\Presentation\Factor\DeviceInfoPresenterFactory.cs" />
     <Compile Include="Solution\Presentation\Factor\DeviceTreePresenterFactory.cs" />
     <Compile Include="Solution\Presentation\Factor\VisionPresenterFactory.cs" />
+    <Compile Include="Solution\Presentation\Presenter\AlgorithmRecipePresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\BasePresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\DeviceDetailPresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\DeviceInfoPresenter.cs" />
@@ -171,6 +185,25 @@
     <Compile Include="Solution\Presentation\UserControls\DeviceTreeUC.Designer.cs">
       <DependentUpon>DeviceTreeUC.cs</DependentUpon>
     </Compile>
+    <Compile Include="Solution\Presentation\UserControls\UCAlgorithmView.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Solution\Presentation\UserControls\UCAlgorithmView.DragDrop.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>UCAlgorithmView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Solution\Presentation\UserControls\UCAlgorithmView.Event.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>UCAlgorithmView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Solution\Presentation\UserControls\UCAlgorithmView.Layout.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>UCAlgorithmView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Solution\Presentation\UserControls\UCAlgorithmView.Validation.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>UCAlgorithmView.cs</DependentUpon>
+    </Compile>
     <Compile Include="Solution\Presentation\UserControls\UCMonitorView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -183,6 +216,8 @@
     <Compile Include="Solution\Presentation\UserControls\UCVisionView.Designer.cs">
       <DependentUpon>UCVisionView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Solution\Presentation\Utils\TreeViewHelper.cs" />
+    <Compile Include="Solution\Presentation\Views\IAlgorithmRecipeView.cs" />
     <Compile Include="Solution\Presentation\Views\IDeviceDatailView.cs" />
     <Compile Include="Solution\Presentation\Views\IDeviceInfoParamView.cs" />
     <Compile Include="Solution\Presentation\Views\IDeviceTreeView.cs" />
@@ -228,6 +263,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Solution\Presentation\UserControls\DeviceTreeUC.resx">
       <DependentUpon>DeviceTreeUC.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Solution\Presentation\UserControls\UCAlgorithmView.resx">
+      <DependentUpon>UCAlgorithmView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Solution\Presentation\UserControls\UCMonitorView.resx">
       <DependentUpon>UCMonitorView.cs</DependentUpon>

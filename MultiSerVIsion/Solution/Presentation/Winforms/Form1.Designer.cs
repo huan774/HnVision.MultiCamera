@@ -29,24 +29,6 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
-            this.split_outer = new System.Windows.Forms.SplitContainer();
-            this.split_Devicetree = new System.Windows.Forms.SplitContainer();
-            this.split_inter = new System.Windows.Forms.SplitContainer();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPageMonitor = new System.Windows.Forms.TabPage();
-            this.tabPageVision = new System.Windows.Forms.TabPage();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.tabPage6 = new System.Windows.Forms.TabPage();
-            this.tabPage7 = new System.Windows.Forms.TabPage();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel6 = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.当前用户ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.用户管理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -62,7 +44,26 @@
             this.相机标定ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.手眼标定ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.九点标定ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.split_outer = new System.Windows.Forms.SplitContainer();
+            this.split_Devicetree = new System.Windows.Forms.SplitContainer();
+            this.split_inter = new System.Windows.Forms.SplitContainer();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageMonitor = new System.Windows.Forms.TabPage();
+            this.tabPageVision = new System.Windows.Forms.TabPage();
+            this.tabPageAlgorithm = new System.Windows.Forms.TabPage();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.tabPage6 = new System.Windows.Forms.TabPage();
+            this.tabPage7 = new System.Windows.Forms.TabPage();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel6 = new System.Windows.Forms.ToolStripStatusLabel();
             this.panel1.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.split_outer)).BeginInit();
             this.split_outer.Panel1.SuspendLayout();
             this.split_outer.Panel2.SuspendLayout();
@@ -78,7 +79,6 @@
             this.splitContainer2.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -89,6 +89,119 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1374, 42);
             this.panel1.TabIndex = 0;
+            // 
+            // menuStrip1
+            // 
+            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(36, 36);
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.当前用户ToolStripMenuItem,
+            this.流程触发ToolStripMenuItem,
+            this.标定配置ToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1374, 42);
+            this.menuStrip1.TabIndex = 2;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // 当前用户ToolStripMenuItem
+            // 
+            this.当前用户ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.用户管理ToolStripMenuItem,
+            this.用户管理ToolStripMenuItem1,
+            this.锁定界面ToolStripMenuItem,
+            this.退出系统ToolStripMenuItem,
+            this.系统时间ToolStripMenuItem});
+            this.当前用户ToolStripMenuItem.Name = "当前用户ToolStripMenuItem";
+            this.当前用户ToolStripMenuItem.Size = new System.Drawing.Size(145, 38);
+            this.当前用户ToolStripMenuItem.Text = "系统管理";
+            // 
+            // 用户管理ToolStripMenuItem
+            // 
+            this.用户管理ToolStripMenuItem.Name = "用户管理ToolStripMenuItem";
+            this.用户管理ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.用户管理ToolStripMenuItem.Text = "当前用户";
+            // 
+            // 用户管理ToolStripMenuItem1
+            // 
+            this.用户管理ToolStripMenuItem1.Name = "用户管理ToolStripMenuItem1";
+            this.用户管理ToolStripMenuItem1.Size = new System.Drawing.Size(271, 48);
+            this.用户管理ToolStripMenuItem1.Text = "用户管理";
+            // 
+            // 锁定界面ToolStripMenuItem
+            // 
+            this.锁定界面ToolStripMenuItem.Name = "锁定界面ToolStripMenuItem";
+            this.锁定界面ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.锁定界面ToolStripMenuItem.Text = "锁定界面";
+            // 
+            // 退出系统ToolStripMenuItem
+            // 
+            this.退出系统ToolStripMenuItem.Name = "退出系统ToolStripMenuItem";
+            this.退出系统ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.退出系统ToolStripMenuItem.Text = "退出系统";
+            // 
+            // 系统时间ToolStripMenuItem
+            // 
+            this.系统时间ToolStripMenuItem.Name = "系统时间ToolStripMenuItem";
+            this.系统时间ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.系统时间ToolStripMenuItem.Text = "系统时间";
+            // 
+            // 流程触发ToolStripMenuItem
+            // 
+            this.流程触发ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.相机触发ToolStripMenuItem,
+            this.流程启停ToolStripMenuItem,
+            this.急停复位ToolStripMenuItem});
+            this.流程触发ToolStripMenuItem.Name = "流程触发ToolStripMenuItem";
+            this.流程触发ToolStripMenuItem.Size = new System.Drawing.Size(145, 38);
+            this.流程触发ToolStripMenuItem.Text = "流程触发";
+            // 
+            // 相机触发ToolStripMenuItem
+            // 
+            this.相机触发ToolStripMenuItem.Name = "相机触发ToolStripMenuItem";
+            this.相机触发ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.相机触发ToolStripMenuItem.Text = "相机触发";
+            // 
+            // 流程启停ToolStripMenuItem
+            // 
+            this.流程启停ToolStripMenuItem.Name = "流程启停ToolStripMenuItem";
+            this.流程启停ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.流程启停ToolStripMenuItem.Text = "流程启停";
+            // 
+            // 急停复位ToolStripMenuItem
+            // 
+            this.急停复位ToolStripMenuItem.Name = "急停复位ToolStripMenuItem";
+            this.急停复位ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.急停复位ToolStripMenuItem.Text = "急停复位";
+            // 
+            // 标定配置ToolStripMenuItem
+            // 
+            this.标定配置ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.相机标定ToolStripMenuItem,
+            this.手眼标定ToolStripMenuItem,
+            this.九点标定ToolStripMenuItem});
+            this.标定配置ToolStripMenuItem.Name = "标定配置ToolStripMenuItem";
+            this.标定配置ToolStripMenuItem.Size = new System.Drawing.Size(145, 38);
+            this.标定配置ToolStripMenuItem.Text = "标定配置";
+            // 
+            // 相机标定ToolStripMenuItem
+            // 
+            this.相机标定ToolStripMenuItem.Name = "相机标定ToolStripMenuItem";
+            this.相机标定ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.相机标定ToolStripMenuItem.Text = "相机标定";
+            // 
+            // 手眼标定ToolStripMenuItem
+            // 
+            this.手眼标定ToolStripMenuItem.Name = "手眼标定ToolStripMenuItem";
+            this.手眼标定ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.手眼标定ToolStripMenuItem.Text = "手眼标定";
+            // 
+            // 九点标定ToolStripMenuItem
+            // 
+            this.九点标定ToolStripMenuItem.Name = "九点标定ToolStripMenuItem";
+            this.九点标定ToolStripMenuItem.Size = new System.Drawing.Size(271, 48);
+            this.九点标定ToolStripMenuItem.Text = "九点标定";
             // 
             // split_outer
             // 
@@ -168,7 +281,7 @@
             // 
             this.tabControl1.Controls.Add(this.tabPageMonitor);
             this.tabControl1.Controls.Add(this.tabPageVision);
-            this.tabControl1.Controls.Add(this.tabPage4);
+            this.tabControl1.Controls.Add(this.tabPageAlgorithm);
             this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Controls.Add(this.tabPage6);
             this.tabControl1.Controls.Add(this.tabPage7);
@@ -201,14 +314,14 @@
             this.tabPageVision.Text = "视觉图像";
             this.tabPageVision.UseVisualStyleBackColor = true;
             // 
-            // tabPage4
+            // tabPageAlgorithm
             // 
-            this.tabPage4.Location = new System.Drawing.Point(10, 53);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(1101, 537);
-            this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "算法配方";
-            this.tabPage4.UseVisualStyleBackColor = true;
+            this.tabPageAlgorithm.Location = new System.Drawing.Point(10, 53);
+            this.tabPageAlgorithm.Name = "tabPageAlgorithm";
+            this.tabPageAlgorithm.Size = new System.Drawing.Size(1101, 537);
+            this.tabPageAlgorithm.TabIndex = 3;
+            this.tabPageAlgorithm.Text = "算法配方";
+            this.tabPageAlgorithm.UseVisualStyleBackColor = true;
             // 
             // tabPage5
             // 
@@ -292,119 +405,6 @@
             this.toolStripStatusLabel6.Size = new System.Drawing.Size(177, 35);
             this.toolStripStatusLabel6.Text = "未确定报警数";
             // 
-            // menuStrip1
-            // 
-            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.menuStrip1.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
-            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(36, 36);
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.当前用户ToolStripMenuItem,
-            this.流程触发ToolStripMenuItem,
-            this.标定配置ToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1374, 42);
-            this.menuStrip1.TabIndex = 2;
-            this.menuStrip1.Text = "menuStrip1";
-            // 
-            // 当前用户ToolStripMenuItem
-            // 
-            this.当前用户ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.用户管理ToolStripMenuItem,
-            this.用户管理ToolStripMenuItem1,
-            this.锁定界面ToolStripMenuItem,
-            this.退出系统ToolStripMenuItem,
-            this.系统时间ToolStripMenuItem});
-            this.当前用户ToolStripMenuItem.Name = "当前用户ToolStripMenuItem";
-            this.当前用户ToolStripMenuItem.Size = new System.Drawing.Size(145, 43);
-            this.当前用户ToolStripMenuItem.Text = "系统管理";
-            // 
-            // 用户管理ToolStripMenuItem
-            // 
-            this.用户管理ToolStripMenuItem.Name = "用户管理ToolStripMenuItem";
-            this.用户管理ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.用户管理ToolStripMenuItem.Text = "当前用户";
-            // 
-            // 用户管理ToolStripMenuItem1
-            // 
-            this.用户管理ToolStripMenuItem1.Name = "用户管理ToolStripMenuItem1";
-            this.用户管理ToolStripMenuItem1.Size = new System.Drawing.Size(403, 48);
-            this.用户管理ToolStripMenuItem1.Text = "用户管理";
-            // 
-            // 锁定界面ToolStripMenuItem
-            // 
-            this.锁定界面ToolStripMenuItem.Name = "锁定界面ToolStripMenuItem";
-            this.锁定界面ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.锁定界面ToolStripMenuItem.Text = "锁定界面";
-            // 
-            // 退出系统ToolStripMenuItem
-            // 
-            this.退出系统ToolStripMenuItem.Name = "退出系统ToolStripMenuItem";
-            this.退出系统ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.退出系统ToolStripMenuItem.Text = "退出系统";
-            // 
-            // 系统时间ToolStripMenuItem
-            // 
-            this.系统时间ToolStripMenuItem.Name = "系统时间ToolStripMenuItem";
-            this.系统时间ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.系统时间ToolStripMenuItem.Text = "系统时间";
-            // 
-            // 流程触发ToolStripMenuItem
-            // 
-            this.流程触发ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.相机触发ToolStripMenuItem,
-            this.流程启停ToolStripMenuItem,
-            this.急停复位ToolStripMenuItem});
-            this.流程触发ToolStripMenuItem.Name = "流程触发ToolStripMenuItem";
-            this.流程触发ToolStripMenuItem.Size = new System.Drawing.Size(145, 38);
-            this.流程触发ToolStripMenuItem.Text = "流程触发";
-            // 
-            // 相机触发ToolStripMenuItem
-            // 
-            this.相机触发ToolStripMenuItem.Name = "相机触发ToolStripMenuItem";
-            this.相机触发ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.相机触发ToolStripMenuItem.Text = "相机触发";
-            // 
-            // 流程启停ToolStripMenuItem
-            // 
-            this.流程启停ToolStripMenuItem.Name = "流程启停ToolStripMenuItem";
-            this.流程启停ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.流程启停ToolStripMenuItem.Text = "流程启停";
-            // 
-            // 急停复位ToolStripMenuItem
-            // 
-            this.急停复位ToolStripMenuItem.Name = "急停复位ToolStripMenuItem";
-            this.急停复位ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.急停复位ToolStripMenuItem.Text = "急停复位";
-            // 
-            // 标定配置ToolStripMenuItem
-            // 
-            this.标定配置ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.相机标定ToolStripMenuItem,
-            this.手眼标定ToolStripMenuItem,
-            this.九点标定ToolStripMenuItem});
-            this.标定配置ToolStripMenuItem.Name = "标定配置ToolStripMenuItem";
-            this.标定配置ToolStripMenuItem.Size = new System.Drawing.Size(145, 38);
-            this.标定配置ToolStripMenuItem.Text = "标定配置";
-            // 
-            // 相机标定ToolStripMenuItem
-            // 
-            this.相机标定ToolStripMenuItem.Name = "相机标定ToolStripMenuItem";
-            this.相机标定ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.相机标定ToolStripMenuItem.Text = "相机标定";
-            // 
-            // 手眼标定ToolStripMenuItem
-            // 
-            this.手眼标定ToolStripMenuItem.Name = "手眼标定ToolStripMenuItem";
-            this.手眼标定ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.手眼标定ToolStripMenuItem.Text = "手眼标定";
-            // 
-            // 九点标定ToolStripMenuItem
-            // 
-            this.九点标定ToolStripMenuItem.Name = "九点标定ToolStripMenuItem";
-            this.九点标定ToolStripMenuItem.Size = new System.Drawing.Size(403, 48);
-            this.九点标定ToolStripMenuItem.Text = "九点标定";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(16F, 35F);
@@ -423,6 +423,8 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.split_outer.Panel1.ResumeLayout(false);
             this.split_outer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.split_outer)).EndInit();
@@ -440,8 +442,6 @@
             this.tabControl1.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -454,7 +454,7 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageMonitor;
         private System.Windows.Forms.TabPage tabPageVision;
-        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.TabPage tabPageAlgorithm;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.TabPage tabPage6;
         private System.Windows.Forms.TabPage tabPage7;

@@ -52,9 +52,9 @@
             this.btn_AddDevice,
             this.btn_DelDevice,
             this.btn_RefreshTress});
-            this.toolStrip1.Location = new System.Drawing.Point(1, 669);
+            this.toolStrip1.Location = new System.Drawing.Point(1, 758);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1127, 42);
+            this.toolStrip1.Size = new System.Drawing.Size(1315, 42);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -91,8 +91,9 @@
             this.treeView_Device.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView_Device.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.treeView_Device.Location = new System.Drawing.Point(1, 1);
+            this.treeView_Device.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.treeView_Device.Name = "treeView_Device";
-            this.treeView_Device.Size = new System.Drawing.Size(1127, 668);
+            this.treeView_Device.Size = new System.Drawing.Size(1315, 757);
             this.treeView_Device.TabIndex = 1;
             this.treeView_Device.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_Device_AfterSelect);
             // 
@@ -133,12 +134,13 @@
             // 
             // DeviceTreeUC
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 24F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 27F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.treeView_Device);
             this.Controls.Add(this.toolStrip1);
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "DeviceTreeUC";
-            this.Size = new System.Drawing.Size(1129, 712);
+            this.Size = new System.Drawing.Size(1317, 801);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.contextMenuStrip_Device.ResumeLayout(false);
