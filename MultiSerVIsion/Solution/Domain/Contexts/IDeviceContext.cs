@@ -1,5 +1,5 @@
-﻿using MultiSerVIsion.Solution.Domain.Entities;
-using MultiSerVIsion.Solution.Domain.Models;
+﻿using MultiSerVIsion.Solution.Domain.Camera;
+using MultiSerVIsion.Solution.Domain.Device;
 using System;
 using System.Collections.Generic;
 using System.Linq;

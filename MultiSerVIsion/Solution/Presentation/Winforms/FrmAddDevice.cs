@@ -1,4 +1,4 @@
-﻿using MultiSerVIsion.Solution.Application.Dtos;
+﻿using MultiSerVIsion.Solution.Application.Device.Dtos;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

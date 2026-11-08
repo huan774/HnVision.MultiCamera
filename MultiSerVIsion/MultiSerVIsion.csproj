@@ -97,103 +97,98 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Solution\Application\DeviceAppService.cs" />
+    <Compile Include="Solution\Application\Device\DeviceAppService.cs" />
     <Compile Include="Solution\Domain\Contexts\DeviceContext.cs" />
     <Compile Include="Solution\Domain\Contexts\IDeviceContext.cs" />
-    <Compile Include="Solution\Domain\Entities\Configs\CameraParameterSpec.cs" />
-    <Compile Include="Solution\Domain\Entities\Configs\ParamSpec.cs" />
-    <Compile Include="Solution\Domain\Enums\AcquisitionMode.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraParameterSpec.cs" />
+    <Compile Include="Solution\Domain\Camera\ParamSpec.cs" />
+    <Compile Include="Solution\Domain\Camera\AcquisitionMode.cs" />
     <Compile Include="Solution\Domain\Enums\NodeEnums.cs" />
-    <Compile Include="Solution\Domain\Events\DeviceConnectedEvent.cs" />
-    <Compile Include="Solution\Domain\Models\CameraDeviceDto.cs" />
-    <Compile Include="Solution\Domain\Models\CameraFrame.cs" />
-    <Compile Include="Solution\Domain\Models\ParamReadResult.cs" />
-    <Compile Include="Solution\Domain\Sources\FrameSourceState.cs" />
-    <Compile Include="Solution\Domain\Sources\IFrameBufferPool.cs" />
-    <Compile Include="Solution\Domain\Sources\IFrameSource.cs" />
-    <Compile Include="Solution\Domain\Sources\IFrameSourceProvider.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraDeviceDto.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraFrame.cs" />
+    <Compile Include="Solution\Domain\Camera\ParamReadResult.cs" />
+    <Compile Include="Solution\Domain\Camera\FrameSourceState.cs" />
+    <Compile Include="Solution\Domain\Camera\IFrameBufferPool.cs" />
+    <Compile Include="Solution\Domain\Camera\IFrameSource.cs" />
+    <Compile Include="Solution\Domain\Camera\IFrameSourceProvider.cs" />
     <Compile Include="Solution\Infrastructure\Events\EventBus.cs" />
     <Compile Include="Solution\Infrastructure\Events\IEventBus.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\HikDescriptor.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\HikParamName.cs" />
-    <Compile Include="Solution\Presentation\Dtos\CameraDisplayDto.cs" />
-    <Compile Include="Solution\Domain\Models\CameraRuntimeStateDto.cs" />
-    <Compile Include="Solution\Application\Dtos\DeviceCreateInput.cs" />
-    <Compile Include="Solution\Application\Dtos\DeviceUpdateIput.cs" />
-    <Compile Include="Solution\Domain\Models\ImageCaptureResult.cs" />
-    <Compile Include="Solution\Application\IDeviceAppService.cs" />
-    <Compile Include="Solution\Application\Services\CameraAppService.cs" />
-    <Compile Include="Solution\Application\Services\ICameraAppService.cs" />
-    <Compile Include="Solution\Domain\Entities\CameraEntity.cs" />
-    <Compile Include="Solution\Domain\Entities\Configs\CameraConnectConfig.cs" />
-    <Compile Include="Solution\Domain\Entities\Configs\MotionCardConnectConfig.cs" />
-    <Compile Include="Solution\Domain\Entities\DeviceEntity.cs" />
-    <Compile Include="Solution\Domain\Enums\CameraStatus.cs" />
-    <Compile Include="Solution\Domain\Enums\DeviceCategory.cs" />
-    <Compile Include="Solution\Domain\Enums\DeviceConnectionStatue.cs" />
-    <Compile Include="Solution\Domain\Factory\DeviceFactory.cs" />
-    <Compile Include="Solution\Domain\Repositories\ICameraHardwareDriver.cs" />
-    <Compile Include="Solution\Domain\Repositories\IDeviceManager.cs" />
-    <Compile Include="Solution\Domain\Repositories\IDeviceRepository.cs" />
-    <Compile Include="Solution\Domain\Services\CameraDomainService.cs" />
-    <Compile Include="Solution\Domain\Services\DeviceDomainService.cs" />
-    <Compile Include="Solution\Domain\Services\ICameraDeviceService.cs" />
-    <Compile Include="Solution\Domain\Services\IDeviceDomainSerivce.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\CameraHardwareRawDto.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\HikCameraHardwareDriver.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\HikCameraSession.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\HikCameraFrameSource.cs" />
-    <Compile Include="Solution\Infrastructure\HiKHardware\FrameBufferPool.cs" />
-    <Compile Include="Solution\Infrastructure\Repository\DeviceManager.cs" />
-    <Compile Include="Solution\Infrastructure\Repository\DeviceRepository.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\HikDescriptor.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\HikParamName.cs" />
+    <Compile Include="Solution\Application\Device\Dtos\DeviceCreateInput.cs" />
+    <Compile Include="Solution\Application\Device\Dtos\DeviceUpdateIput.cs" />
+    <Compile Include="Solution\Application\Device\IDeviceAppService.cs" />
+    <Compile Include="Solution\Application\Camera\CameraAppService.cs" />
+    <Compile Include="Solution\Application\Camera\ICameraAppService.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraEntity.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraConnectConfig.cs" />
+    <Compile Include="Solution\Domain\Device\MotionCardConnectConfig.cs" />
+    <Compile Include="Solution\Domain\Device\DeviceEntity.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraStatus.cs" />
+    <Compile Include="Solution\Domain\Device\DeviceConnectionStatue.cs" />
+    <Compile Include="Solution\Domain\Device\DeviceFactory.cs" />
+    <Compile Include="Solution\Domain\Camera\ICameraHardwareDriver.cs" />
+    <Compile Include="Solution\Domain\Device\IDeviceManager.cs" />
+    <Compile Include="Solution\Domain\Device\IDeviceRepository.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraDomainService.cs" />
+    <Compile Include="Solution\Domain\Device\DeviceDomainService.cs" />
+    <Compile Include="Solution\Domain\Camera\ICameraDeviceService.cs" />
+    <Compile Include="Solution\Domain\Device\IDeviceDomainSerivce.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\CameraHardwareRawDto.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\HikCameraHardwareDriver.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\HikCameraSession.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\HikCameraFrameSource.cs" />
+    <Compile Include="Solution\Infrastructure\Camera\HikVision\FrameBufferPool.cs" />
+    <Compile Include="Solution\Infrastructure\Device\DeviceManager.cs" />
+    <Compile Include="Solution\Infrastructure\Device\DeviceRepository.cs" />
     <Compile Include="Solution\Presentation\Events\OnlineCameraSelectedEvent.cs" />
     <Compile Include="Solution\Presentation\Events\DeviceConnectionChangedEveent.cs" />
     <Compile Include="Solution\Presentation\Events\ConfigDeviceSelectedEvent.cs" />
     <Compile Include="Solution\Presentation\Events\DeviceSelectionClearedEvent.cs" />
-    <Compile Include="Solution\Presentation\Presenter\BasePresenter.cs" />
-    <Compile Include="Solution\Presentation\Presenter\DeviceDetailPresenter.cs" />
-    <Compile Include="Solution\Presentation\Presenter\DeviceInfoPresenter.cs" />
-    <Compile Include="Solution\Presentation\Presenter\DeviceTressPresenter.cs" />
+    <Compile Include="Solution\Presentation\Common\BasePresenter.cs" />
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceDetailPresenter.cs" />
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceInfoPresenter.cs" />
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceTressPresenter.cs" />
     <Compile Include="Solution\Presentation\Presenter\Factory\DeviceDetailView.cs" />
-    <Compile Include="Solution\Presentation\Presenter\VisionPreseter.cs" />
-    <Compile Include="Solution\Presentation\UserControls\BaseViewUc.cs">
+    <Compile Include="Solution\Presentation\CameraPreview\VisionPreseter.cs" />
+    <Compile Include="Solution\Presentation\Shell\BaseViewUc.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\BaseViewUc.Designer.cs">
+    <Compile Include="Solution\Presentation\Shell\BaseViewUc.Designer.cs">
       <DependentUpon>BaseViewUc.cs</DependentUpon>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\CameraDateilUC.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\CameraDateilUC.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\CameraDateilUC.Designer.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\CameraDateilUC.Designer.cs">
       <DependentUpon>CameraDateilUC.cs</DependentUpon>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\DeviceInfoUC.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceInfoUC.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\DeviceInfoUC.Designer.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceInfoUC.Designer.cs">
       <DependentUpon>DeviceInfoUC.cs</DependentUpon>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\DeviceTreeUC.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceTreeUC.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\DeviceTreeUC.Designer.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\DeviceTreeUC.Designer.cs">
       <DependentUpon>DeviceTreeUC.cs</DependentUpon>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\UCVisionView.cs">
+    <Compile Include="Solution\Presentation\CameraPreview\UCVisionView.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\UserControls\UCVisionView.Designer.cs">
+    <Compile Include="Solution\Presentation\CameraPreview\UCVisionView.Designer.cs">
       <DependentUpon>UCVisionView.cs</DependentUpon>
     </Compile>
-    <Compile Include="Solution\Presentation\Views\IDeviceDatailView.cs" />
-    <Compile Include="Solution\Presentation\Views\IDeviceInfoParamView.cs" />
-    <Compile Include="Solution\Presentation\Views\IDeviceTreeView.cs" />
-    <Compile Include="Solution\Presentation\Views\IVisionView.cs" />
-    <Compile Include="Solution\Presentation\Winforms\Form1.cs">
+    <Compile Include="Solution\Presentation\DevicePanel\IDeviceDatailView.cs" />
+    <Compile Include="Solution\Presentation\DevicePanel\IDeviceInfoParamView.cs" />
+    <Compile Include="Solution\Presentation\DevicePanel\IDeviceTreeView.cs" />
+    <Compile Include="Solution\Presentation\CameraPreview\IVisionView.cs" />
+    <Compile Include="Solution\Presentation\Shell\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Solution\Presentation\Winforms\Form1.Designer.cs">
+    <Compile Include="Solution\Presentation\Shell\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
@@ -206,7 +201,7 @@
     </Compile>
     <Compile Include="Solution\Shared\CamerKernel\CameraException.cs" />
     <Compile Include="Solution\Shared\Exceptions\DeviceNotFoundException.cs" />
-    <Compile Include="Solution\Domain\Extensions\CameraMappingExtensions.cs" />
+    <Compile Include="Solution\Domain\Camera\CameraMappingExtensions.cs" />
     <Compile Include="Solution\Shared\GlobalConst.cs" />
     <Compile Include="Solution\Shared\Helpers\FileloHelper.cs" />
     <Compile Include="Solution\Shared\Helpers\JsonConfigHelper.cs" />
@@ -223,19 +218,19 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="Solution\Presentation\UserControls\CameraDateilUC.resx">
+    <EmbeddedResource Include="Solution\Presentation\DevicePanel\CameraDateilUC.resx">
       <DependentUpon>CameraDateilUC.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Solution\Presentation\UserControls\DeviceInfoUC.resx">
+    <EmbeddedResource Include="Solution\Presentation\DevicePanel\DeviceInfoUC.resx">
       <DependentUpon>DeviceInfoUC.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Solution\Presentation\UserControls\DeviceTreeUC.resx">
+    <EmbeddedResource Include="Solution\Presentation\DevicePanel\DeviceTreeUC.resx">
       <DependentUpon>DeviceTreeUC.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Solution\Presentation\UserControls\UCVisionView.resx">
+    <EmbeddedResource Include="Solution\Presentation\CameraPreview\UCVisionView.resx">
       <DependentUpon>UCVisionView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Solution\Presentation\Winforms\Form1.resx">
+    <EmbeddedResource Include="Solution\Presentation\Shell\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Solution\Presentation\Winforms\FrmAddDevice.resx">
@@ -254,18 +249,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Solution\Application\Interfaces\" />
-    <Folder Include="Solution\Domain\Algorithms\" />
-    <Folder Include="Solution\Domain\Operators\Fake\" />
-    <Folder Include="Solution\Infrastructure\Algorithms\" />
-    <Folder Include="Solution\Infrastructure\Halcon\" />
-    <Folder Include="Solution\Infrastructure\Sources\" />
-    <Folder Include="Solution\Presentation\Factor\" />
-    <Folder Include="Solution\Presentation\Forms\" />
-    <Folder Include="Solution\Presentation\UserControls\ParameterEditors\" />
-    <Folder Include="Solution\Presentation\Utils\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />

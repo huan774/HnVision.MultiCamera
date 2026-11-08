@@ -1,6 +1,6 @@
-﻿using MultiSerVIsion.Solution.Domain.Entities;
+﻿using MultiSerVIsion.Solution.Domain.Camera;
+using MultiSerVIsion.Solution.Domain.Device;
 using MultiSerVIsion.Solution.Domain.Enums;
-using MultiSerVIsion.Solution.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

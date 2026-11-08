@@ -1,5 +1,6 @@
-﻿using MultiSerVIsion.Solution.Presentation.UserControls;
-using MultiSerVIsion.Solution.Presentation.Views;
+﻿using MultiSerVIsion.Solution.Presentation.Shell;
+using MultiSerVIsion.Solution.Presentation.DevicePanel;
+using MultiSerVIsion.Solution.Presentation.CameraPreview;
 using System;
 using System.Collections.Generic;
 using System.Linq;

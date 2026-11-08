@@ -1,13 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using MultiSerVIsion.Solution.Application;
-using MultiSerVIsion.Solution.Application.Services;
+using MultiSerVIsion.Solution.Application.Device;
+using MultiSerVIsion.Solution.Application.Camera;
 using MultiSerVIsion.Solution.Domain.Contexts;
-using MultiSerVIsion.Solution.Domain.Repositories;
-using MultiSerVIsion.Solution.Domain.Services;
+using MultiSerVIsion.Solution.Domain.Camera;
+using MultiSerVIsion.Solution.Domain.Device;
 using MultiSerVIsion.Solution.Infrastructure.Events;
-using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
-using MultiSerVIsion.Solution.Infrastructure.Repository;
-using MultiSerVIsion.Solution.Presentation.Views;
+using MultiSerVIsion.Solution.Infrastructure.Camera.HikVision;
+using MultiSerVIsion.Solution.Infrastructure.Device;
+using MultiSerVIsion.Solution.Presentation.DevicePanel;
+using MultiSerVIsion.Solution.Presentation.CameraPreview;
+using MultiSerVIsion.Solution.Presentation.Shell;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -55,20 +57,22 @@ namespace MultiSerVIsion
             services.AddSingleton<IDeviceAppService, DeviceAppService>();
 
             // ====================== 相机业务层 ======================
-            // 硬件驱动注册为瞬时：每个相机连接使用独立实例，避免句柄/线程冲突
-            // 驱动内部的静态扫描缓存依然全局共享，不影响扫描结果复用
+            // 【多品牌扩展点】新增品牌时在此按品牌 Key 追加 ICameraHardwareDriver 注册，
+            // 例如 DaHua：services.AddKeyedSingleton<ICameraHardwareDriver, DaHuaCameraDriver>("DaHua");
+            // UI、应用服务与领域契约均无需改动。
             services.AddSingleton<ICameraHardwareDriver, HikCameraHardwareDriver>();
             services.AddSingleton<ICameraDeviceService, CameraDomainService>();
             services.AddSingleton<ICameraAppService, CameraApplicationoService>();
+
+            // ====================== 基础设施层 ======================
+            services.AddSingleton<IEventBus, EventBus>();
+            services.AddSingleton<Solution.Domain.Contexts.IDeviceContext, DeviceContext>();
 
             // ====================== 装配约定 ======================
             // 容器只注册后台服务；视图与 Presenter 由宿主（Form1）唯一创建并绑定，
             // 不从容器解析视图（避免多实例：Presenter 绑定实例与界面显示实例不一致）。
             // Presenter 构造参数含运行时视图实例，因此也不注册到容器；
             // 纯 new 转发的 Presenter 工厂已删除。
-            // ====================== 基础设施层 ======================
-            services.AddSingleton<IEventBus, EventBus>();
-            services.AddSingleton<Solution.Domain.Contexts.IDeviceContext, DeviceContext>();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using MultiSerVIsion.Solution.Domain.Models;
+﻿using MultiSerVIsion.Solution.Domain.Camera;
 using System;
 using System.Collections.Generic;
 using System.Linq;

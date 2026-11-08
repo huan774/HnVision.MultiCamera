@@ -1,0 +1,261 @@
+﻿using MultiSerVIsion.Solution.Application.Device.Dtos;
+using MultiSerVIsion.Solution.Domain.Camera;
+using MultiSerVIsion.Solution.Domain.Device;
+using MultiSerVIsion.Solution.Shared.Exceptions;
+using MultiSerVIsion.Solution.Shared.Helpers;
+using MultiSerVIsion.Solution.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace MultiSerVIsion.Solution.Application.Device
+{
+    public class DeviceAppService: IDeviceAppService
+    {
+       
+        private readonly IDeviceDomainSerivce _domainService;
+        private readonly IDeviceManager _manager;
+
+        public DeviceAppService( IDeviceDomainSerivce domainService,IDeviceManager deviceManager)
+        {
+            _domainService = domainService;
+            _manager = deviceManager;
+        }
+        public OperationResult<DeviceEntity> CopyDevice(string soureDeviceId)
+        {
+            try
+            {
+                var source = _manager.GetDeviceById(soureDeviceId);
+                var copyCheck = _domainService.CanCopyDevice(source);
+                if (!copyCheck.IsValid)
+                    return OperationResult<DeviceEntity>.Fail(copyCheck.Message);
+
+                var newDevice = _domainService.CloneDevice(source);
+                _manager.AddDevice(newDevice);
+
+                string groupTag = _manager.GetGroupTag(soureDeviceId);
+                return OperationResult<DeviceEntity>.Succes(newDevice);
+            }
+            catch (DeviceNotFoundException ex)
+            {
+                LogHelper.Error("复制设备失败，源设备不存在", ex);
+                return OperationResult<DeviceEntity>.Fail(ex.Message);
+            }
+            catch (DeviceDuplicateIdException ex)
+            {
+                LogHelper.Error("复制设备ID冲突", ex);
+                return OperationResult<DeviceEntity>.Fail(ex.Message);
+            }
+            catch (StorageIoException ex)
+            {
+                LogHelper.Error("复制设备存储异常", ex);
+                return OperationResult<DeviceEntity>.Fail($"本地存储异常：{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("复制设备未知异常", ex);
+                return OperationResult<DeviceEntity>.Fail($"系统异常：{ex.Message}");
+            }
+        }
+
+        public OperationResult<DeviceEntity> CreateDevice(DeviceCreateInput input)
+        {
+            try
+            {
+                var entity = DeviceFactory.CreateDevice(input.DeviceType);
+                if (entity == null)
+                    return OperationResult<DeviceEntity>.Fail($"不支持设备类型:{input.DeviceType}");
+
+                entity.DeviceId=Guid.NewGuid().ToString("N");
+                entity.DeviceName=input.DeviceName;
+                entity.DeviceType=input.DeviceType;
+                entity.IpAddress=input.IpAddress;
+                entity.GroupTage = input.GroupTag;
+                entity.IsEnable=input.IsEnable;
+
+                var validate = _domainService.ValidateDeviceEntity(entity);
+              
+                if (!validate.IsValid)
+                    return OperationResult<DeviceEntity>.Fail(validate.Message);
+                _manager.AddDevice(entity);
+              
+                return OperationResult<DeviceEntity>.Succes(entity);
+            
+            }catch(DeviceDuplicateIdException ex)
+            {
+                LogHelper.Error("新增设备ID重复", ex);
+                return OperationResult<DeviceEntity>.Fail(ex.Message);
+            }
+            catch (StorageIoException ex)
+            {
+                LogHelper.Error("存储失败", ex);
+                return OperationResult<DeviceEntity>.Fail($"本地存储异常：{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("新增设备未知异常", ex);
+                return OperationResult<DeviceEntity>.Fail($"系统异常：{ex.Message}");
+            }
+        }
+        
+        public OperationResult<bool> DeleteDevice(string devId) 
+        {
+            try
+            {
+                bool success = _manager.RemoveDevice(devId);
+                return OperationResult<bool>.Succes(success);
+
+            }
+            catch (DeviceDuplicateIdException ex)
+            {
+                LogHelper.Error("删除设备不存在", ex);
+                return OperationResult<bool>.Fail(ex.Message);
+            }
+            catch (StorageIoException ex)
+            {
+                LogHelper.Error("删除存储异常", ex);
+                return OperationResult<bool>.Fail($"本地存储异常：{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("删除设备未知异常", ex);
+                return OperationResult<bool>.Fail($"系统异常：{ex.Message}");
+            }
+        }
+        public OperationResult<bool> ToggleDeviceEnable(string devId) 
+        {
+            try
+            {
+                var dveice = _manager.GetDeviceById(devId);
+                var check = _domainService.CheckToggleEnable(dveice);
+
+                if (!check.IsValid)
+                    return OperationResult<bool>.Fail(check.Message);
+
+              
+                return OperationResult<bool>.Succes(true);
+
+            }catch (DeviceNotFoundException ex)
+            {
+                LogHelper.Error("启停设备不存在", ex);
+                return OperationResult<bool>.Fail(ex.Message);
+            }
+            catch (StorageIoException ex)
+            {
+                LogHelper.Error("启停存储异常", ex);
+                return OperationResult<bool>.Fail($"本地存储异常：{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("启停设备未知异常", ex);
+                return OperationResult<bool>.Fail($"系统异常：{ex.Message}");
+            }
+        }
+        public OperationResult<List<DeviceEntity>> GetDeviceByGroup(string groupTag) 
+        { 
+           try
+           {
+                var list = _manager.GetDevicesByGroup(groupTag);
+                return OperationResult<List<DeviceEntity>>.Succes(list);
+           }
+            catch (StorageIoException ex)
+           {
+                LogHelper.Error("分组查询存储异常", ex);
+                return OperationResult<List<DeviceEntity>>.Fail($"本地存储异常：{ex.Message}");
+           }
+        }
+        public OperationResult<List<DeviceEntity>> GetAllDevices()
+        {
+             try
+             {
+                 var list = _manager.GetAllDevices();
+                 return OperationResult<List<DeviceEntity>>.Succes(list);
+             }
+             catch(StorageIoException ex)
+             {
+                 LogHelper.Error("全局查询储存异常",ex);
+                 return OperationResult<List<DeviceEntity>>.Fail($"本地存储异常：{ex.Message}");
+             }
+            
+        }
+        public OperationResult<DeviceEntity> UpdataDevice(DeviceUpdateIput input)
+        {
+            try
+            {
+                var target = _manager.GetDeviceById(input.DeviceId);
+                if (target == null)
+                    return OperationResult< DeviceEntity>.Fail($"设备{input.DeviceName}不存在");
+
+                target.DeviceId = input.DeviceId;
+                target.DeviceName = input.DeviceName;
+                target.IpAddress=input.IpAddress;
+                target.DeviceType = input.DeviceType;
+                target.GroupTage = input.GroupTag;
+                target.IsEnable=input.IsEnable;
+
+              
+                return OperationResult<DeviceEntity>.Succes(target);
+            }
+            catch (DeviceNotFoundException ex)
+            {
+                LogHelper.Error("更新设备不存在", ex);
+                return OperationResult<DeviceEntity>.Fail(ex.Message);
+            }
+            catch (StorageIoException ex)
+            {
+                LogHelper.Error("更新存储异常", ex);
+                return OperationResult<DeviceEntity>.Fail($"本地存储异常：{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("更新设备未知异常", ex);
+                return OperationResult<DeviceEntity>.Fail($"系统异常：{ex.Message}");
+            }
+        }
+        public OperationResult<DeviceEntity> GetDeviceById(string devId)
+        {
+            try
+            {
+                var data = _manager.GetDeviceById(devId);
+                return OperationResult<DeviceEntity>.Succes(data);
+
+            }
+            catch( StorageIoException ex)
+            {
+                LogHelper.Error("查询设备存储异常", ex);
+                return OperationResult<DeviceEntity>.Fail($"本地存储异常：{ex.Message}");
+
+            }
+        }
+        public OperationResult SaveProject()
+        {
+            try
+            {
+                // 将内存中所有设备全量落盘（职责：协调 Manager 调用仓储持久化）
+                _manager.SaveToStorage();
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("保存工程", ex);
+                return OperationResult.Fail($"保存工程失败：{ex.Message}");
+            }
+        }
+        public OperationResult LoadProject()
+        {
+            try
+            {
+                // 启动时从 JSON 全量加载设备到内存（职责：协调 Manager 调用仓储加载）
+                _manager.LoadFromStorage();
+                return OperationResult.Succes();
+            }catch(Exception ex)
+            {
+                LogHelper.Error("加载工程异常", ex);
+                return OperationResult.Fail($"加载工程失败：{ex.Message}");
+            }
+        }
+    }
+}

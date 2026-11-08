@@ -1,0 +1,20 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MultiSerVIsion.Solution.Domain.Camera
+{
+    public class CameraDeviceDto
+    {
+        public string DeviceId { get; set; } = string.Empty;
+        public string IpAddress { get; set; } = string.Empty;
+        public string SerialNumber { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string InterfaceType { get; set; } = string.Empty;
+        public string MacAddress { get; set; } = string.Empty;
+        public string DeviceName { get; set; } = string.Empty;
+        public string Manufacturer { get; set; } = string.Empty;
+    }
+}
