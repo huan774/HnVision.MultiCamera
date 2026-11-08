@@ -1,8 +1,8 @@
 ﻿using MultiSerVIsion.Solution.Application;
 using MultiSerVIsion.Solution.Application.Services;
+using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Infrastructure.Events;
 using MultiSerVIsion.Solution.Presentation.Events;
-using MultiSerVIsion.Solution.Presentation.Factor;
 using MultiSerVIsion.Solution.Presentation.Presenter;
 using MultiSerVIsion.Solution.Presentation.UserControls;
 using MultiSerVIsion.Solution.Presentation.Views;
@@ -21,26 +21,37 @@ using System.Windows.Forms;
 
 namespace MultiSerVIsion
 {
+    /// <summary>
+    /// 主窗体：设备树 / 设备信息 / 相机参数面板 / 相机预览页的宿主。
+    /// 【范围】项目已收敛为纯相机调试，仅保留相机相关标签页与视图。
+    /// </summary>
     public partial class Form1 : Form
     {
-        //主Tag动态创建并缓存用户控件 key:TabPage.Name Value:UserControl
-        private readonly Dictionary<string, BaseViewUc> _viewCache = new Dictionary<string, BaseViewUc>();
-        //MVP架构 presenter工厂 构造注入服务
-        private readonly Dictionary<string, BasePresenter> _presenterCache = new Dictionary<string, BasePresenter>();
+        /// <summary>
+        /// 标签页条目：视图与其 Presenter 成对缓存，避免两份缓存各自维护 key。
+        /// </summary>
+        private sealed class ViewEntry
+        {
+            /// <summary>视图实例（切走时隐藏，宿主关闭时释放）</summary>
+            public BaseViewUc View;
+
+            /// <summary>该页 Presenter；无 Presenter 的展示页为 null</summary>
+            public BasePresenter Presenter;
+        }
+
+        //标签页视图与其 Presenter 成对缓存，key = TabPage.Name
+        private readonly Dictionary<string, ViewEntry> _viewEntries = new Dictionary<string, ViewEntry>();
         //记录当前选中Tag的UserControl
         private BaseViewUc _lastActiveView;
 
         /// <summary>
-        /// 构造注入接口声明
+        /// 构造注入接口声明（仅后台服务；视图与 Presenter 由本窗体直接创建）
         /// </summary>
         private readonly Solution.Domain.Contexts.IDeviceContext _deviceContext;//限界上下文服务接口
         private readonly IEventBus _eventBus;//事件总线服务接口
-        private readonly IDeviceInfoPresenterFactory _deviceinfoPresenterFactory;//演示者工厂服务接口
-        private readonly IDeviceTreePresenterFactory _deviceTreePresenterFactory;
         private readonly IDeviceAppService _deviceAppService;//设备管理服务接口
         private readonly ICameraAppService _cameraAppService;//海康相机服务接口
-        private readonly IVisonPresenterFactor _visionPresenterFactory;
-        private readonly IDeviceDetailPresenterFactory _deviceDetailPresenterFactory;
+        private readonly IDeviceManager _deviceManager;//设备内存管理器（供设备树/信息页 Presenter 使用）
 
         // 参数面板视图与 Presenter：全生命周期唯一，保证「Presenter 写入的实例」就是「界面显示的实例」
         private  IDeviceDatailView _deviceDetailView;
@@ -49,23 +60,17 @@ namespace MultiSerVIsion
         //构造注入服务
         public Form1(
             IEventBus eventBus,
-            IVisonPresenterFactor visionPresenterFactory,
             IDeviceAppService deviceAppService,
             ICameraAppService cameraAppService,
-            IDeviceInfoPresenterFactory devicePresenterFactory,
-            IDeviceTreePresenterFactory deviceTreePresenterFactory,
-            IDeviceDetailPresenterFactory deviceDetailPresenterFactory,
+            IDeviceManager deviceManager,
              Solution.Domain.Contexts.IDeviceContext deviceContext)
         {
-          
+           
             _eventBus = eventBus;
-            _deviceinfoPresenterFactory = devicePresenterFactory;
-            _deviceTreePresenterFactory = deviceTreePresenterFactory;
-            _deviceDetailPresenterFactory = deviceDetailPresenterFactory;
-            _deviceAppService= deviceAppService;
-            _cameraAppService= cameraAppService;
-            _visionPresenterFactory=visionPresenterFactory;
-            _deviceContext= deviceContext;
+            _deviceAppService = deviceAppService;
+            _cameraAppService = cameraAppService;
+            _deviceManager = deviceManager;
+            _deviceContext = deviceContext;
 
             //事件总线订阅选中设备切换事件
             _eventBus.Subscribe<ConfigDeviceSelectedEvent>(OnDeviceSelectedSwitchTab);
@@ -80,16 +85,20 @@ namespace MultiSerVIsion
 
         private void InitPresent()
         {
-
             IDeviceTreeView treeView = new DeviceTreeUC();
             IDeviceInfoParamView deviceInfo = new DeviceInfoUC();
-            IVisionView visionView = new UCVisionView();
+
+            // 视图由宿主唯一创建，Presenter 直接构造注入（不再经工厂转发）
+            var treePresenter = new DeviceTressPresenter(_eventBus, treeView, _deviceAppService, _deviceContext, _deviceManager, _cameraAppService);
+            treePresenter.Init();
+
+            var infoPresenter = new DeviceInfoPresenter(deviceInfo, _deviceManager, _eventBus, _cameraAppService, _deviceContext);
+            infoPresenter.Init();
 
             // 参数面板只创建一个视图实例，并让 Presenter 绑定到该实例
             _deviceDetailView = new CameraDateilUC();
-            _deviceDetailPresenter = _deviceDetailPresenterFactory.Create(_deviceDetailView);
-            var Treepresenter = _deviceTreePresenterFactory.Create(treeView);
-            var infopresenter = _deviceinfoPresenterFactory.Create(deviceInfo);
+            _deviceDetailPresenter = new DeviceDetailPresenter(_cameraAppService, _deviceDetailView, _eventBus);
+            _deviceDetailPresenter.Init();
 
             split_Devicetree.Panel1.Controls.Add(treeView as DeviceTreeUC);
             split_Devicetree.Panel2.Controls.Add(deviceInfo as DeviceInfoUC);
@@ -170,25 +179,21 @@ namespace MultiSerVIsion
 
             string tabKey = targetTab.Name;
             // 已创建过则复用缓存中的视图
-            if (_viewCache.ContainsKey(tabKey)) return;
-                                        
+            if (_viewEntries.ContainsKey(tabKey)) return;
+
             BaseViewUc view = null;
+            BasePresenter presenter = null;
+
             switch (tabKey)
             {
-                case "tabPageMonitor":
-                    view = new UCMonitorView();
-                    break;
-
                 case "tabPageVision":
-                    // 视觉页由 Presenter 驱动取流与帧渲染，创建后立即初始化并缓存引用
+                    // 视觉页由 Presenter 驱动取流与帧渲染，创建后立即初始化
                     var visionView = new UCVisionView();
-                    var visionPresenter = _visionPresenterFactory.Create(visionView);
+                    var visionPresenter = new VisionPreseter(visionView, _eventBus, _deviceContext, _cameraAppService);
                     visionPresenter.Init();
-                    _presenterCache[tabKey] = visionPresenter;
+                    presenter = visionPresenter;
                     view = visionView;
-                    break;
-                case "tabPageAlgorithm":
-                    view = new UCAlgorithmView();
+                    split_outer.Panel1Collapsed = false;
                     break;
 
             }
@@ -199,7 +204,7 @@ namespace MultiSerVIsion
             view.Dock = DockStyle.Fill;
             view.Visible = false;
             targetTab.Controls.Add(view);
-            _viewCache.Add(tabKey, view);
+            _viewEntries.Add(tabKey, new ViewEntry { View = view, Presenter = presenter });
         }
         private void SwitchTabView(TabPage targetTab)
         {
@@ -208,26 +213,21 @@ namespace MultiSerVIsion
             string tabKey = targetTab.Name;
 
             CreateViewIfNotExist(targetTab);
-            if (!_viewCache.TryGetValue(tabKey, out BaseViewUc currView))
+            if (!_viewEntries.TryGetValue(tabKey, out var entry))
                 return;
+
+            BaseViewUc currView = entry.View;
 
             if(_lastActiveView!=null&& _lastActiveView != currView)
             {
+                // 切走：仅隐藏并通知视图暂停（如停止取流/刷新），保留实例与状态
                 _lastActiveView.OnViewHide();
                 _lastActiveView.Visible = false;
             }
 
-         /*   if (currView is UCMonitorView)
-            {
-                splitContainer2.SplitterDistance = ClampSplitterDistance(685);
-            }
-            else
-            {
-                splitContainer2.SplitterDistance = ClampSplitterDistance(789);
-            }
-*/
+            // 显示当前视图：必须调用 OnViewShow，否则子类覆写的展示逻辑永不执行
             currView.Visible = true;
-            currView.OnViewHide();
+            currView.OnViewShow();
 
             _lastActiveView = currView;
 
@@ -254,6 +254,9 @@ namespace MultiSerVIsion
                     break;
                 }
             }
+            // 未命中任何页签时直接返回，避免 TabPages[-1] 越界
+            if (clickIdx < 0) return;
+
             TabPage clickTab=tab.TabPages[clickIdx];
             if (clickTab== tab.SelectedTab)
             {
@@ -263,11 +266,17 @@ namespace MultiSerVIsion
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            foreach (var uc in _viewCache.Values)
+            // 宿主关闭：释放全部页面的 Presenter（先退订事件）与视图（含非托管资源）
+            foreach (var entry in _viewEntries.Values)
             {
-                uc.Dispose();
+                (entry.Presenter as IDisposable)?.Dispose();
+                entry.View.Dispose();
             }
-            
+            _viewEntries.Clear();
+
+            // 右侧参数面板不在标签页缓存中，需单独释放
+            (_deviceDetailPresenter as IDisposable)?.Dispose();
+            (_deviceDetailView as IDisposable)?.Dispose();
         }
         private void Vision_ExposureChanged(object sender, EventArgs e)
         {

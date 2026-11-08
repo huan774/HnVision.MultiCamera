@@ -25,6 +25,19 @@ namespace MultiSerVIsion.Solution.Domain.Entities
         [JsonIgnore]
         public CameraStatus DetailStatus { get; set; } = CameraStatus.Idle;
         public DateTime LastConnectTime {  get; set; }
+
+        /// <summary>
+        /// 相机参数规格集合（可持久化）。
+        /// 【职责】记录相机可下发参数的规格与当前值，支持 UI 限幅与落盘回填。
+        /// </summary>
+        public List<CameraParameterSpec> ParameterSpecs { get; set; } = new List<CameraParameterSpec>();
+
+        /// <summary>
+        /// 当前采集模式（可持久化）：连续采集 / 软触发。
+        /// 【互斥】与 CameraStatus.Streaming 联动：采流中禁止直接改写，需先停流，
+        /// 否则 SDK 内部状态与配置会不一致。
+        /// </summary>
+        public AcquisitionMode AcquisitionMode { get; set; } = AcquisitionMode.Continuous;
         public override DeviceEntity ShallowClone()
         {
             var newCam=new CameraEntity();

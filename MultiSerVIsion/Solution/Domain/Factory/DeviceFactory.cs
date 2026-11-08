@@ -15,8 +15,6 @@ namespace MultiSerVIsion.Solution.Domain.Factory
             {
                 case "Camera":
                     return new CameraEntity();
-                 /*case "Motion":
-                     return new MotionDeviceEntity();*/
                 default:
                     throw new ArgumentOutOfRangeException(nameof(deviceType));
             }

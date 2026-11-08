@@ -3,6 +3,7 @@ using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
 using MultiSerVIsion.Solution.Domain.Models;
+using MultiSerVIsion.Solution.Domain.Sources;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Domain.Services;
 using MultiSerVIsion.Solution.Infrastructure.Events;
@@ -170,6 +171,9 @@ namespace MultiSerVIsion.Solution.Application.Services
                     await RefreshParamsFromDeviceAsync(device, connectConfig.SerialNumber, overwriteValues: true);
                 }
 
+                // 回填参数规格到实体（供 UI 限幅与下发前校验；仅在组态且正式连接成功后执行）
+                await BackfillParametersAsync(device, connectConfig.SerialNumber);
+
                 // 7. 发布全局连接事件
                 _eventBus.Publish(new DeviceConnectionChangedEveent(deviceId, true));
 
@@ -259,6 +263,14 @@ namespace MultiSerVIsion.Solution.Application.Services
             if (camera == null)
                 return OperationResult.Fail("设备不存在或不是相机类型");
 
+            // 取流固定为连续采集：若当前为软触发模式，先切回连续（含互斥校验与落盘）
+            if (camera.AcquisitionMode != AcquisitionMode.Continuous)
+            {
+                var modeResult = await SetAcquisitionMode(deviceId, AcquisitionMode.Continuous);
+                if (!modeResult.Success)
+                    return modeResult;
+            }
+
             // 业务校验：交给领域服务判断能否采流
             var validateResult = _cameraDomainService.ValidateCanStartStream(camera);
             if (!validateResult.Success)
@@ -324,6 +336,264 @@ namespace MultiSerVIsion.Solution.Application.Services
                 camera.DetailStatus = CameraStatus.Connected;
                 return OperationResult.Fail($"停止采流异常：{ex.Message}");
             }
+        }
+
+        // ==================== 采集模式 / 单步取流 / 图源分发 ====================
+
+        /// <summary>
+        /// 设置采集模式（连续 / 软触发）。
+        /// 【互斥】采流中先自动停流；校验通过后下发驱动并写入实体落盘。
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <param name="mode">目标采集模式</param>
+        public async Task<OperationResult> SetAcquisitionMode(string deviceId, AcquisitionMode mode)
+        {
+            var camera = GetCameraEntity(deviceId);
+            if (camera == null)
+                return OperationResult.Fail("设备不存在或不是相机类型");
+
+            var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("设备缺少序列号，无法设置采集模式");
+
+            try
+            {
+                // 采流中不允许直接切换，按产品约定自动停流后再切换
+                if (camera.DetailStatus == CameraStatus.Streaming)
+                {
+                    var stopResult = StopStream(deviceId);
+                    if (!stopResult.Success) return stopResult;
+                }
+
+                var validate = _cameraDomainService.ValidateCanSwitchAcquisitionMode(camera, mode);
+                if (!validate.Success) return validate;
+
+                var result = await _driver.SetAcquisitionModeAsync(serialNumber, mode);
+                if (!result.Success) return result;
+
+                camera.AcquisitionMode = mode;
+                _deviceManager.Update(camera);
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("设置采集模式异常", ex);
+                return OperationResult.Fail($"设置采集模式异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 软件触发单步（软触发模式下一次出帧）。
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        public async Task<OperationResult> SoftwareTriggerOnce(string deviceId)
+        {
+            var camera = GetCameraEntity(deviceId);
+            if (camera == null)
+                return OperationResult.Fail("设备不存在或不是相机类型");
+
+            var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("设备缺少序列号，无法执行软触发");
+
+            try
+            {
+                var validate = _cameraDomainService.ValidateCanSoftwareTrigger(camera);
+                if (!validate.Success) return validate;
+
+                var result = await _driver.SoftwareTriggerOnceAsync(serialNumber);
+                if (!result.Success) return result;
+
+                // 单步已触发一次出帧，标记为采流中以供 UI 切到停止态
+                camera.DetailStatus = CameraStatus.Streaming;
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error("软触发单步异常", ex);
+                return OperationResult.Fail($"软触发单步异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取指定设备的图源（供预览/算法按契约订阅）。
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <returns>图源实例；设备不存在返回 null</returns>
+        public IFrameSource GetFrameSource(string deviceId)
+        {
+            if (!TryResolveSerialNumber(deviceId, out var serialNumber)) return null;
+            return _driver.GetFrameSource(serialNumber);
+        }
+
+        /// <summary>
+        /// 下发相机参数：取值 → UI 限幅 → 下发前二次校验 → 下发 → 成功后随实体落盘。
+        /// 【失败回滚】校验或下发失败时恢复原值，避免内存值与相机不一致。
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <param name="parameterName">参数名</param>
+        /// <param name="value">目标值（字符串，内部按规格转换）</param>
+        public async Task<OperationResult> SetCameraParameter(string deviceId, string parameterName, string value)
+        {
+            var camera = GetCameraEntity(deviceId);
+            if (camera == null)
+                return OperationResult.Fail("设备不存在或不是相机类型");
+
+            var serialNumber = camera.CameraAllConfig.ConnectConfig.SerialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("设备缺少序列号，无法下发参数");
+
+            var spec = FindParameterSpec(camera, parameterName);
+            if (spec == null)
+                return OperationResult.Fail("未找到参数规格");
+
+            var originalValue = spec.CurrentValue;
+
+            try
+            {
+                // 1. UI 限幅：与界面共用同一份规格，保证两处规则一致
+                var clamped = _cameraDomainService.ClampParameter(spec, value);
+
+                // 2. 下发前二次校验
+                spec.CurrentValue = clamped;
+                var validate = _cameraDomainService.ValidateParameter(camera, spec);
+                if (!validate.Success)
+                {
+                    spec.CurrentValue = originalValue;
+                    return validate;
+                }
+
+                // 3. 下发（按规格类型转换值）
+                var driverValue = ConvertSpecValue(spec, clamped);
+                var result = await _driver.SetParamAsync(serialNumber, parameterName, driverValue);
+                if (!result.Success)
+                {
+                    spec.CurrentValue = originalValue;
+                    return result;
+                }
+
+                // 4. 成功后随实体落盘
+                _deviceManager.Update(camera);
+                return OperationResult.Succes();
+            }
+            catch (Exception ex)
+            {
+                spec.CurrentValue = originalValue;
+                LogHelper.Error("下发相机参数异常", ex);
+                return OperationResult.Fail($"下发参数异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从相机回填参数规格到实体并落盘。
+        /// 【时机】仅在「已加入组态且正式连接成功」后调用；测试连接只验证可达性，不读参、不回填。
+        /// </summary>
+        /// <param name="camera">相机实体</param>
+        /// <param name="serialNumber">相机序列号</param>
+        private async Task BackfillParametersAsync(CameraEntity camera, string serialNumber)
+        {
+            if (camera == null || string.IsNullOrWhiteSpace(serialNumber)) return;
+
+            foreach (var descriptor in HikDescriptor.All)
+            {
+                try
+                {
+                    var readResult = await _driver.ReadParamAsync(serialNumber, descriptor.ParamName);
+                    if (!readResult.Success || readResult.Data == null) continue;
+
+                    UpsertParameterSpec(camera, ToCameraParameterSpec(readResult.Data));
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Error($"回填参数规格 {descriptor.ParamName} 异常", ex);
+                }
+            }
+
+            _deviceManager.Update(camera);
+        }
+
+        /// <summary>按名称查找实体中缓存的参数规格</summary>
+        /// <param name="camera">相机实体</param>
+        /// <param name="parameterName">参数名</param>
+        /// <returns>命中时返回规格；未缓存返回 null</returns>
+        private static CameraParameterSpec FindParameterSpec(CameraEntity camera, string parameterName)
+        {
+            if (camera == null || camera.ParameterSpecs == null) return null;
+            if (string.IsNullOrWhiteSpace(parameterName)) return null;
+
+            foreach (var spec in camera.ParameterSpecs)
+            {
+                if (string.Equals(spec.Name, parameterName, StringComparison.OrdinalIgnoreCase))
+                    return spec;
+            }
+            return null;
+        }
+
+        /// <summary>新增或更新实体中的参数规格（按名称匹配）</summary>
+        /// <param name="camera">相机实体</param>
+        /// <param name="spec">待写入规格</param>
+        private static void UpsertParameterSpec(CameraEntity camera, CameraParameterSpec spec)
+        {
+            if (camera == null || spec == null || string.IsNullOrWhiteSpace(spec.Name)) return;
+
+            if (camera.ParameterSpecs == null)
+                camera.ParameterSpecs = new List<CameraParameterSpec>();
+
+            for (int i = 0; i < camera.ParameterSpecs.Count; i++)
+            {
+                if (string.Equals(camera.ParameterSpecs[i].Name, spec.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    camera.ParameterSpecs[i] = spec;
+                    return;
+                }
+            }
+
+            camera.ParameterSpecs.Add(spec);
+        }
+
+        /// <summary>硬件描述符 → 实体参数规格（含当前值与范围）</summary>
+        /// <param name="descriptor">硬件层描述符</param>
+        /// <returns>实体参数规格</returns>
+        private static CameraParameterSpec ToCameraParameterSpec(HikDescriptor descriptor)
+        {
+            return new CameraParameterSpec
+            {
+                Name = descriptor.ParamName,
+                ValueType = ToParameterValueType(descriptor.ValueType),
+                CurrentValue = descriptor.CurrentValue?.ToString() ?? string.Empty,
+                Min = descriptor.HasRange ? descriptor.Min : (double?)null,
+                Max = descriptor.HasRange ? descriptor.Max : (double?)null,
+                Step = descriptor.Step > 0 ? descriptor.Step : (double?)null,
+                IsReadOnly = !descriptor.IsWritable
+            };
+        }
+
+        /// <summary>硬件值类型 → 实体参数值类型</summary>
+        /// <param name="valueType">硬件层值类型</param>
+        /// <returns>实体参数值类型</returns>
+        private static ParameterValueType ToParameterValueType(HikParamValueType valueType)
+        {
+            switch (valueType)
+            {
+                case HikParamValueType.Int: return ParameterValueType.Int;
+                case HikParamValueType.Enum: return ParameterValueType.Enum;
+                default: return ParameterValueType.Float;
+            }
+        }
+
+        /// <summary>按规格类型把字符串值转换为驱动可接收的值</summary>
+        /// <param name="spec">参数规格</param>
+        /// <param name="value">字符串取值</param>
+        /// <returns>转换后的值；无法解析时原样返回字符串</returns>
+        private static object ConvertSpecValue(CameraParameterSpec spec, string value)
+        {
+            if (spec == null) return value;
+            if (spec.ValueType == ParameterValueType.Enum) return value;
+
+            if (spec.ValueType == ParameterValueType.Int)
+                return long.TryParse(value, out var intValue) ? (object)intValue : value;
+
+            return double.TryParse(value, out var doubleValue) ? (object)doubleValue : value;
         }
 
         // ==================== 参数配置（对接硬件层：用户可调节的高频与基础参数） ====================

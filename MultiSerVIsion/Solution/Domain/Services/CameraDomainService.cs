@@ -92,6 +92,132 @@ namespace MultiSerVIsion.Solution.Domain.Services
             }
 
             /// <summary>
+            /// 校验参数下发合法性（下发前二次校验，含范围与步长校验）。
+            /// 业务规则：只读参数禁止下发；枚举参数取值非空；数值参数需可解析、在范围内且为步长整数倍。
+            /// </summary>
+            /// <param name="device">目标相机实体</param>
+            /// <param name="spec">参数规格（含目标值）</param>
+            /// <returns>校验结果；不合法时 Message 说明原因</returns>
+            public OperationResult ValidateParameter(CameraEntity device, CameraParameterSpec spec)
+            {
+                if (device == null)
+                    return OperationResult.Fail("设备实体不能为空");
+
+                if (spec == null || string.IsNullOrWhiteSpace(spec.Name))
+                    return OperationResult.Fail("参数规格不能为空");
+
+                if (spec.IsReadOnly)
+                    return OperationResult.Fail($"参数 {spec.Name} 为只读，不允许下发");
+
+                // 枚举型：取值以符号名存储，只要求非空
+                if (spec.ValueType == ParameterValueType.Enum)
+                {
+                    return string.IsNullOrWhiteSpace(spec.CurrentValue)
+                        ? OperationResult.Fail($"参数 {spec.Name} 的枚举取值不能为空")
+                        : OperationResult.Succes();
+                }
+
+                if (!double.TryParse(spec.CurrentValue, out var numeric))
+                    return OperationResult.Fail($"参数 {spec.Name} 需要数值");
+
+                if (spec.Min.HasValue && numeric < spec.Min.Value)
+                    return OperationResult.Fail($"参数 {spec.Name} 不能小于 {spec.Min.Value}");
+
+                if (spec.Max.HasValue && numeric > spec.Max.Value)
+                    return OperationResult.Fail($"参数 {spec.Name} 不能大于 {spec.Max.Value}");
+
+                // 步长校验：以 Min 为基准判断是否落在步长整点上（带容差，享避浮点误差导致误拦）
+                if (spec.Step.HasValue && spec.Step.Value > 0 && spec.Min.HasValue)
+                {
+                    double ratio = (numeric - spec.Min.Value) / spec.Step.Value;
+                    if (Math.Abs(ratio - Math.Round(ratio)) > 1e-3)
+                        return OperationResult.Fail($"参数 {spec.Name} 必须为步长 {spec.Step.Value} 的整数倍");
+                }
+
+                return OperationResult.Succes();
+            }
+
+            /// <summary>
+            /// 将参数值限幅到 [Min, Max] 并按 Step 对齐（UI 限幅基准）。
+            /// 【说明】与 <see cref="ValidateParameter"/> 共用同一份规格，保证界面与实体校验规则一致。
+            /// </summary>
+            /// <param name="spec">参数规格</param>
+            /// <param name="rawValue">原始输入值</param>
+            /// <returns>限幅并取整后的安全值（字符串形式）；无法解析时原样返回</returns>
+            public string ClampParameter(CameraParameterSpec spec, string rawValue)
+            {
+                if (spec == null) return rawValue;
+                if (spec.ValueType == ParameterValueType.Enum) return rawValue;
+
+                if (!double.TryParse(rawValue, out var numeric)) return rawValue;
+
+                double result = numeric;
+                if (spec.Min.HasValue && result < spec.Min.Value) result = spec.Min.Value;
+                if (spec.Max.HasValue && result > spec.Max.Value) result = spec.Max.Value;
+
+                if (spec.Step.HasValue && spec.Step.Value > 0)
+                {
+                    double baseValue = spec.Min ?? 0;
+                    result = baseValue + Math.Round((result - baseValue) / spec.Step.Value) * spec.Step.Value;
+
+                    // 对齐后可能又越界，二次夹取保证结果始终落在合法区间
+                    if (spec.Min.HasValue && result < spec.Min.Value) result = spec.Min.Value;
+                    if (spec.Max.HasValue && result > spec.Max.Value) result = spec.Max.Value;
+                }
+
+                // 整型参数不允许输出小数，否则下发会被相机拒绝
+                if (spec.ValueType == ParameterValueType.Int)
+                    return Math.Round(result).ToString();
+
+                return result.ToString();
+            }
+
+            /// <summary>
+            /// 校验是否允许切换采集模式（连续 / 软触发互斥，采流中禁止切换）。
+            /// 业务规则：采流中必须先停流；故障状态不允许切换。
+            /// </summary>
+            /// <param name="device">目标相机实体</param>
+            /// <param name="targetMode">目标采集模式</param>
+            /// <returns>校验结果</returns>
+            public OperationResult ValidateCanSwitchAcquisitionMode(CameraEntity device, AcquisitionMode targetMode)
+            {
+                if (device == null)
+                    return OperationResult.Fail("设备实体不能为空");
+
+                if (device.AcquisitionMode == targetMode)
+                    return OperationResult.Succes("采集模式未变化");
+
+                if (device.DetailStatus == CameraStatus.Streaming)
+                    return OperationResult.Fail("设备正在采流，请先停止采集后再切换采集模式");
+
+                if (device.DetailStatus == CameraStatus.Fault)
+                    return OperationResult.Fail("设备处于故障状态，无法切换采集模式");
+
+                return OperationResult.Succes();
+            }
+
+            /// <summary>
+            /// 校验是否允许执行软触发单步（仅软触发模式且已连接）。
+            /// 业务规则：未连接不可触发；连续采集模式下禁止单步。
+            /// </summary>
+            /// <param name="device">目标相机实体</param>
+            /// <returns>校验结果</returns>
+            public OperationResult ValidateCanSoftwareTrigger(CameraEntity device)
+            {
+                if (device == null)
+                    return OperationResult.Fail("设备实体不能为空");
+
+                if (device.DetailStatus != CameraStatus.Connected &&
+                    device.DetailStatus != CameraStatus.Streaming)
+                    return OperationResult.Fail("设备未连接，无法执行软触发");
+
+                if (device.AcquisitionMode != AcquisitionMode.SoftTrigger)
+                    return OperationResult.Fail("当前为连续采集模式，请先切换为软触发模式再执行单步");
+
+                return OperationResult.Succes();
+            }
+
+            /// <summary>
             /// 将扫描结果批量转换为相机实体，自动按序列号去重
             /// 业务规则：同序列号已存在则跳过，不存在则生成新实体并填充默认配置
             /// </summary>

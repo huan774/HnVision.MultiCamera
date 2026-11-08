@@ -1,9 +1,13 @@
-﻿using MultiSerVIsion.Solution.Presentation.Views;
+﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
+using MultiSerVIsion.Solution.Domain.Enums;
+using MultiSerVIsion.Solution.Presentation.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,10 +21,48 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         public event Action StartGrabRequested;
         public event Action StopGrabRequested;
 
+        /// <summary>取流按钮点击 → 请求连续采集</summary>
+        public event Action OnStartStreamClicked;
+        /// <summary>停止按钮点击 → 请求停止取流</summary>
+        public event Action OnStopStreamClicked;
+
+        /// <summary>单步（软触发）按钮（代码创建，不依赖设计器控件命名）</summary>
+        private ToolStripButton _btnSoftTrigger;
+
+        /// <summary>当前设备回填的参数规格（供输入限幅使用）</summary>
+        private IReadOnlyList<CameraParameterSpec> _parameterSpecs = new List<CameraParameterSpec>();
+
+        /// <summary>抓拍图片保存目录（应用目录下 Capture）</summary>
+        private static readonly string CaptureFolder =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Capture");
+
         public UCVisionView()
         {
             InitializeComponent();
+            InitializeStreamControls();
             SetGrabButtonsEnabled(canStart: true, canStop: false);
+        }
+
+        /// <summary>
+        /// 初始化采集模式下拉与单步按钮。
+        /// 【说明】采用代码方式创建/绑定而非设计器，避免手工改动 Designer 生成代码后被覆盖。
+        /// </summary>
+        private void InitializeStreamControls()
+        {
+            // 导航栏保持简单：取流默认连续采集，单步按钮控制软触发
+            _btnSoftTrigger = new ToolStripButton
+            {
+                Name = "btn_Capture",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                Text = "抓拍",
+                Enabled = true
+            };
+            _btnSoftTrigger.Click += btn_SoftTrigger_Click;
+            toolStrip1.Items.Add(_btnSoftTrigger);
+
+            // 三按钮文案：启动 / 暂停 / 抓拍
+            btn_StartGrab.Text = "启动";
+            btn_StopGrab.Text = "暂停";
         }
         
         public override void OnViewShow()
@@ -116,14 +158,101 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             base.OnHandleDestroyed(e);
         }
 
+        // ==================== 采集模式 / 三按钮联动 ====================
+
+        /// <summary>
+        /// 抓拍按钮点击：把当前画面保存为图片文件，不再做软触发。
+        /// 【说明】保存动作留在视图层，因为它依赖当前显示内容，不涉及业务规则。
+        /// </summary>
+        private void btn_SoftTrigger_Click(object sender, EventArgs e)
+        {
+            var image = PitCamera1.Image as Bitmap;
+            if (image == null)
+            {
+                ShowMessage("当前没有可抓拍的图像", isError: true);
+                return;
+            }
+
+            try
+            {
+                if (!Directory.Exists(CaptureFolder))
+                    Directory.CreateDirectory(CaptureFolder);
+
+                // 时间戳命名，避免重名覆盖；PNG 无损便于后续算法读取
+                string fileName = $"CAP_{DateTime.Now:yyyyMMdd_HHmmss_fff}.png";
+                string fullPath = Path.Combine(CaptureFolder, fileName);
+
+                // 复制一份再保存，避免与渲染线程争用同一张位图
+                using (var snapshot = new Bitmap(image))
+                {
+                    snapshot.Save(fullPath, ImageFormat.Png);
+                }
+
+                ShowMessage($"已保存：{fileName}");
+            }
+            catch (Exception ex)
+            {
+                ShowMessage($"抓拍保存失败：{ex.Message}", isError: true);
+            }
+        }
+
+        /// <summary>
+        /// 按参数规格刷新参数配置区：缓存规格供输入限幅与提示使用。
+        /// </summary>
+        /// <param name="specs">参数规格集合</param>
+        public void ShowParameterSpecs(IReadOnlyList<CameraParameterSpec> specs)
+        {
+            _parameterSpecs = specs ?? new List<CameraParameterSpec>();
+        }
+
+        /// <summary>
+        /// 按规格对输入值做限幅（数值型按 Min/Max/Step 对齐），供文本输入 Validating 兼底调用。
+        /// </summary>
+        /// <param name="parameterName">参数名</param>
+        /// <param name="rawValue">原始输入</param>
+        /// <returns>限幅后的安全值；无对应规格或非数值时原样返回</returns>
+        public string ClampParameterInput(string parameterName, string rawValue)
+        {
+            if (_parameterSpecs == null) return rawValue;
+
+            foreach (var spec in _parameterSpecs)
+            {
+                if (!string.Equals(spec.Name, parameterName, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!spec.IsNumeric) return rawValue;
+                if (!double.TryParse(rawValue, out var numeric)) return rawValue;
+
+                double result = numeric;
+                if (spec.Min.HasValue && result < spec.Min.Value) result = spec.Min.Value;
+                if (spec.Max.HasValue && result > spec.Max.Value) result = spec.Max.Value;
+
+                if (spec.Step.HasValue && spec.Step.Value > 0)
+                {
+                    double baseValue = spec.Min ?? 0;
+                    result = baseValue + Math.Round((result - baseValue) / spec.Step.Value) * spec.Step.Value;
+
+                    // 对齐后可能又越界，二次夹取保证落在合法区间
+                    if (spec.Min.HasValue && result < spec.Min.Value) result = spec.Min.Value;
+                    if (spec.Max.HasValue && result > spec.Max.Value) result = spec.Max.Value;
+                }
+
+                return spec.ValueType == ParameterValueType.Int
+                    ? Math.Round(result).ToString()
+                    : result.ToString();
+            }
+
+            return rawValue;
+        }
+
         private void btn_StopGrab_Click(object sender, EventArgs e)
         {
             StopGrabRequested?.Invoke();
+            OnStopStreamClicked?.Invoke();
         }
 
         private void btn_StartGrab_Click(object sender, EventArgs e)
         {
             StartGrabRequested?.Invoke();
+            OnStartStreamClicked?.Invoke();
         }
     }
 }

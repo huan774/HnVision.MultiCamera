@@ -1,5 +1,7 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Models;
+using MultiSerVIsion.Solution.Domain.Enums;
+using MultiSerVIsion.Solution.Domain.Sources;
 using MultiSerVIsion.Solution.Domain.Repositories;
 using MultiSerVIsion.Solution.Shared.Models;
 using MvCamCtrl.NET;
@@ -41,8 +43,11 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         private static readonly object _cacheLock = new object();
 
         // 多相机采集上下文缓存：序列号 → 独立上下文
-        private readonly ConcurrentDictionary<string, CameraGrabContext> _cameraContexts
-            = new ConcurrentDictionary<string, CameraGrabContext>();
+        private readonly ConcurrentDictionary<string, HikCameraSession> _cameraContexts
+            = new ConcurrentDictionary<string, HikCameraSession>();
+
+        /// <summary>帧缓冲池：暂存缓冲复用，降低每帧分配与 GC 压力。</summary>
+        private readonly FrameBufferPool _framePool = new FrameBufferPool();
 
         /// <summary>SDK 错误码映射表（按需补充）</summary>
         private readonly Dictionary<int, string> _errorCodeMap = new Dictionary<int, string>
@@ -54,21 +59,8 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             { -1005, "网络包大小不匹配" }
         };
 
-        /// <summary>
-        /// 单台相机的独立采集上下文
-        /// 【多相机隔离】每台相机各自持有线程、缓冲与状态，互不干扰
-        /// </summary>
-        private sealed class CameraGrabContext
-        {
-            public MyCamera CameraObj;
-            public Action<CameraFrame> FrameCallback;
-            public Thread GrabThread;
-            public volatile bool IsGrabbing;
-
-            // 像素格式转换输出缓冲（非托管）
-            public IntPtr ConvertBuffer = IntPtr.Zero;
-            public uint ConvertBufferSize = 0;
-        }
+        // 单台相机的会话状态已独立到同目录的 HikCameraSession，
+        // 实现「会话数据」与「驱动行为」分离，便于多相机并发隔离与单元测试。
 
         /// <summary>
         /// 相机帧事件参数：携带设备序列号与统一帧数据，供上层订阅使用。
@@ -248,7 +240,11 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
                 if (errorCode != MV_OK || cameraObj == null)
                     return OperationResult.Fail($"连接失败：{GetErrorMessage(errorCode)}");
 
-                _cameraContexts[config.SerialNumber] = new CameraGrabContext { CameraObj = cameraObj };
+                var session = new HikCameraSession(config.SerialNumber) { CameraObj = cameraObj };
+                // 连接后统一置为连续采集（触发关闭），保证默认直接出图；
+                // 避免持久化中残留的触发开启导致“接外部触发”而看不到图像。
+                ApplyAcquisitionMode(session, AcquisitionMode.Continuous);
+                _cameraContexts[config.SerialNumber] = session;
                 return OperationResult.Succes();
             }
             catch (Exception ex)
@@ -362,7 +358,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         /// </summary>
         private void GrabThreadProcess(object state)
         {
-            var ctx = (CameraGrabContext)state;
+            var ctx = (HikCameraSession)state;
             var camera = ctx.CameraObj;
             var frameInfo = new MyCamera.MV_FRAME_OUT();
 
@@ -394,7 +390,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         }
 
         /// <summary>将 SDK 帧转换为统一业务帧（托管内存独立拷贝，脱离 SDK 生命周期）</summary>
-        private CameraFrame ConvertToCameraFrame(MyCamera camera, ref MyCamera.MV_FRAME_OUT frameInfo, CameraGrabContext ctx)
+        private CameraFrame ConvertToCameraFrame(MyCamera camera, ref MyCamera.MV_FRAME_OUT frameInfo, HikCameraSession ctx)
         {
             int width = (int)frameInfo.stFrameInfo.nWidth;
             int height = (int)frameInfo.stFrameInfo.nHeight;
@@ -420,22 +416,30 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             convertParam.enSrcPixelType = srcPixel;
             convertParam.enDstPixelType = dstPixel;
             convertParam.pDstBuffer = ctx.ConvertBuffer;
+            convertParam.nDstLen = (uint)dstSize;
             convertParam.nDstBufferSize = (uint)dstSize;
 
             byte[] data;
+            PixelFormatEnum frameFormat;
             int convertRet = camera.MV_CC_ConvertPixelType_NET(ref convertParam);
             if (convertRet == MV_OK)
             {
-                // 转换成功：从转换缓冲拷贝到独立托管数组
-                data = new byte[dstSize];
-                Marshal.Copy(ctx.ConvertBuffer, data, 0, dstSize);
+                // 转换成功：优先按 SDK 回填的实际长度拷贝，长度异常时回退到估算值
+                int actualLen = (int)convertParam.nDstLen;
+                if (actualLen <= 0 || actualLen > dstSize) actualLen = dstSize;
+
+                data = new byte[actualLen];
+                Marshal.Copy(ctx.ConvertBuffer, data, 0, actualLen);
+                frameFormat = isMono ? PixelFormatEnum.Mono8 : PixelFormatEnum.BGR24;
             }
             else
             {
-                // 转换失败：退回直接拷贝原始数据（保底可用）
+                // 转换失败：退回直接拷贝原始数据（保底可用），
+                // 并按真实长度推断格式，避免把单字节数据标成 24bpp 而被上层丢弃
                 int rawLen = (int)frameInfo.stFrameInfo.nFrameLen;
                 data = new byte[rawLen];
                 Marshal.Copy(frameInfo.pBufAddr, data, 0, rawLen);
+                frameFormat = ResolveFallbackFormat(rawLen, width, height);
             }
 
             // 海康时间戳：高 32 位 + 低 32 位组合成 64 位 tick（纳秒）
@@ -446,11 +450,31 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             {
                 Width = width,
                 Height = height,
-                PixelFormat = isMono ? PixelFormatEnum.Mono8 : PixelFormatEnum.BGR24,
+                PixelFormat = frameFormat,
                 Data = data,
                 Timestamp = timestamp,
                 FrameId = frameInfo.stFrameInfo.nFrameNum
             };
+        }
+
+        /// <summary>
+        /// 转换失败时按原始数据长度推断真实像素格式。
+        /// 【必要性】若一律标记为 BGR24，而上层按 3 字节/像素校验长度，
+        /// 单字节的原始数据（如 Bayer / 单色）会被判定为无效帧而整帧丢弃，
+        /// 表现为「黑白正常、彩色采图失效」。
+        /// </summary>
+        /// <param name="rawLen">原始帧字节数。</param>
+        /// <param name="width">图像宽度。</param>
+        /// <param name="height">图像高度。</param>
+        /// <returns>推断出的像素格式；无法判定时返回 Unknown。</returns>
+        private static PixelFormatEnum ResolveFallbackFormat(int rawLen, int width, int height)
+        {
+            if (rawLen <= 0 || width <= 0 || height <= 0) return PixelFormatEnum.Unknown;
+
+            if (rawLen >= width * height * 3) return PixelFormatEnum.BGR24;
+            if (rawLen >= width * height) return PixelFormatEnum.Mono8;
+
+            return PixelFormatEnum.Unknown;
         }
 
         /// <summary>判断是否为单色（灰度）像素格式</summary>
@@ -596,7 +620,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         /// <param name="serialNumber">相机序列号</param>
         /// <param name="ctx">输出：采集上下文</param>
         /// <returns>设备已连接时返回 true</returns>
-        private bool TryGetContext(string serialNumber, out CameraGrabContext ctx)
+        private bool TryGetContext(string serialNumber, out HikCameraSession ctx)
         {
             ctx = null;
             if (string.IsNullOrWhiteSpace(serialNumber)) return false;
@@ -753,7 +777,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
 
         /// <summary>暂停取流（仅在实际采流时执行）</summary>
         /// <returns>确实执行了暂停时返回 true，用于决定是否需要恢复</returns>
-        private static bool PauseGrab(CameraGrabContext ctx)
+        private static bool PauseGrab(HikCameraSession ctx)
         {
             if (ctx == null || !ctx.IsGrabbing) return false;
 
@@ -764,14 +788,14 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         }
 
         /// <summary>恢复取流：仅在存在帧回调时执行（参数配置完成后调用）</summary>
-        private void ResumeGrab(CameraGrabContext ctx, string serialNumber)
+        private void ResumeGrab(HikCameraSession ctx, string serialNumber)
         {
             if (ctx?.FrameCallback == null) return;
             BeginGrab(ctx, serialNumber);
         }
 
         /// <summary>开启 SDK 采集并启动取流线程（StartStreamAsync 与参数配置恢复共用）</summary>
-        private OperationResult BeginGrab(CameraGrabContext ctx, string serialNumber)
+        private OperationResult BeginGrab(HikCameraSession ctx, string serialNumber)
         {
             int ret = ctx.CameraObj.MV_CC_StartGrabbing_NET();
             if (ret != MV_OK)
@@ -905,6 +929,109 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
             return false;
         }
 
+        // ==================== 采集模式 / 软触发 / 图源 ====================
+
+        /// <summary>
+        /// 按采集模式显式设置触发模式与触发源。
+        /// 【互斥】采集过程中不允许切换，需先停止采流，否则 SDK 配置不生效。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号。</param>
+        /// <param name="mode">目标采集模式。</param>
+        /// <returns>操作结果。</returns>
+        public async Task<OperationResult> SetAcquisitionModeAsync(string serialNumber, AcquisitionMode mode)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("序列号不能为空");
+            if (!TryGetContext(serialNumber, out var session))
+                return OperationResult.Fail("设备未连接，请先连接后再设置采集模式");
+
+            return await Task.Run(() =>
+            {
+                // 会话级锁：保证同一相机的启停流与模式切换不会交错
+                lock (session.SyncRoot)
+                {
+                    if (session.IsGrabbing || session.IsStreaming)
+                        return OperationResult.Fail("设备正在采流，请先停止采集后再切换采集模式");
+
+                    var apply = ApplyAcquisitionMode(session, mode);
+                    if (!apply.Success) return apply;
+
+                    session.Source.UpdateState(false, mode);
+                    return OperationResult.Succes();
+                }
+            });
+        }
+
+        /// <summary>
+        /// 软件触发一次（仅在软触发模式下有效）。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号。</param>
+        /// <returns>操作结果；帧通过 IFrameSource 回调输出。</returns>
+        public async Task<OperationResult> SoftwareTriggerOnceAsync(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return OperationResult.Fail("序列号不能为空");
+            if (!TryGetContext(serialNumber, out var session))
+                return OperationResult.Fail("设备未连接，请先连接后再执行软触发");
+
+            if (session.Mode != AcquisitionMode.SoftTrigger)
+                return OperationResult.Fail("当前为连续采集模式，请先切换为软触发模式");
+
+            return await Task.Run(() =>
+            {
+                int ret = session.CameraObj.MV_CC_SetCommandValue_NET(HikParamName.TriggerSoftware);
+                return ret == MV_OK
+                    ? OperationResult.Succes()
+                    : OperationResult.Fail($"软触发失败：{GetErrorMessage(ret)}");
+            });
+        }
+
+        /// <summary>
+        /// 获取指定序列号的图源（多相机各自独立）。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号。</param>
+        /// <returns>图源实例；未连接返回 null。</returns>
+        public IFrameSource GetFrameSource(string serialNumber)
+        {
+            return TryGetContext(serialNumber, out var session) ? session.Source : null;
+        }
+
+        /// <summary>
+        /// 把采集模式落实到 SDK 节点：连续=关闭触发；软触发=选软件触发源并开启触发模式。
+        /// 【说明】采集模式与触发配置互斥且必须成对设置，故统一在此处收敛。
+        /// </summary>
+        /// <param name="session">目标相机会话。</param>
+        /// <param name="mode">目标采集模式。</param>
+        /// <returns>操作结果。</returns>
+        private OperationResult ApplyAcquisitionMode(HikCameraSession session, AcquisitionMode mode)
+        {
+            var cam = session?.CameraObj;
+            if (cam == null) return OperationResult.Fail("设备句柄为空");
+
+            if (mode == AcquisitionMode.SoftTrigger)
+            {
+                int srcRet = cam.MV_CC_SetEnumValueByString_NET(
+                    HikParamName.TriggerSource, HikParamName.TriggerSourceSoftware);
+                if (srcRet != MV_OK)
+                    return OperationResult.Fail($"设置触发源失败：{GetErrorMessage(srcRet)}");
+
+                int onRet = cam.MV_CC_SetEnumValueByString_NET(
+                    HikParamName.TriggerMode, HikParamName.TriggerModeOn);
+                if (onRet != MV_OK)
+                    return OperationResult.Fail($"开启触发模式失败：{GetErrorMessage(onRet)}");
+            }
+            else
+            {
+                int offRet = cam.MV_CC_SetEnumValueByString_NET(
+                    HikParamName.TriggerMode, HikParamName.TriggerModeOff);
+                if (offRet != MV_OK)
+                    return OperationResult.Fail($"关闭触发模式失败：{GetErrorMessage(offRet)}");
+            }
+
+            session.Mode = mode;
+            return OperationResult.Succes();
+        }
+
         // ==================== 登录（私有，不暴露 SDK 句柄） ====================
 
         /// <summary>异步登录：创建并打开设备，返回 SDK 句柄与错误码（仅类内部使用）</summary>
@@ -992,7 +1119,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         // ==================== 缓冲管理 ====================
 
         /// <summary>按需分配非托管转换缓冲（不够大才重新分配）</summary>
-        private void EnsureConvertBuffer(CameraGrabContext ctx, int size)
+        private void EnsureConvertBuffer(HikCameraSession ctx, int size)
         {
             if (ctx.ConvertBuffer != IntPtr.Zero && ctx.ConvertBufferSize >= size)
                 return;
@@ -1008,7 +1135,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         }
 
         /// <summary>释放非托管转换缓冲</summary>
-        private void ReleaseGrabBuffer(CameraGrabContext ctx)
+        private void ReleaseGrabBuffer(HikCameraSession ctx)
         {
             if (ctx.ConvertBuffer != IntPtr.Zero)
             {
@@ -1044,7 +1171,7 @@ namespace MultiSerVIsion.Solution.Infrastructure.HiKHardware
         }
 
         /// <summary>等待取流线程退出（上限 2 秒，避免死等）</summary>
-        private static void JoinGrabThread(CameraGrabContext ctx)
+        private static void JoinGrabThread(HikCameraSession ctx)
         {
             var thread = ctx.GrabThread;
             if (thread != null && thread.IsAlive && thread != Thread.CurrentThread)

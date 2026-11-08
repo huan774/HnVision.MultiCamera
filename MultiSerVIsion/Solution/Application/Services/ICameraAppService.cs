@@ -3,6 +3,7 @@ using MultiSerVIsion.Solution.Domain.Entities;
 using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Enums;
 using MultiSerVIsion.Solution.Domain.Models;
+using MultiSerVIsion.Solution.Domain.Sources;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
@@ -69,5 +70,25 @@ namespace MultiSerVIsion.Solution.Application.Services
         /// <param name="paramName">参数节点名</param>
         /// <returns>成功时 Data 含已回填的规格与当前值</returns>
         Task<OperationResult<ParamReadResult>> ReadParamAsync(string deviceId, string paramName);
+
+        /// <summary>软件触发单步（软触发模式下一次出帧）。</summary>
+        /// <param name="deviceId">组态设备 ID。</param>
+        Task<OperationResult> SoftwareTriggerOnce(string deviceId);
+
+        /// <summary>设置采集模式（含互斥校验；采流中自动按需停流）。</summary>
+        /// <param name="deviceId">组态设备 ID。</param>
+        /// <param name="mode">目标采集模式。</param>
+        Task<OperationResult> SetAcquisitionMode(string deviceId, AcquisitionMode mode);
+
+        /// <summary>下发相机参数：UI 限幅 → 二次校验 → 下发 → 成功后写实体并落盘。</summary>
+        /// <param name="deviceId">组态设备 ID。</param>
+        /// <param name="parameterName">参数名。</param>
+        /// <param name="value">目标值（字符串，内部按规格转换）。</param>
+        Task<OperationResult> SetCameraParameter(string deviceId, string parameterName, string value);
+
+        /// <summary>获取指定设备的图源（供预览/算法按契约订阅）。</summary>
+        /// <param name="deviceId">组态设备 ID。</param>
+        /// <returns>图源实例；设备不存在返回 null。</returns>
+        IFrameSource GetFrameSource(string deviceId);
     }
 }

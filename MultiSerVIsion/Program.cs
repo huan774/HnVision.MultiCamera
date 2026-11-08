@@ -7,7 +7,7 @@ using MultiSerVIsion.Solution.Domain.Services;
 using MultiSerVIsion.Solution.Infrastructure.Events;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Infrastructure.Repository;
-using MultiSerVIsion.Solution.Presentation.Factor;
+using MultiSerVIsion.Solution.Presentation.Views;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -61,18 +61,11 @@ namespace MultiSerVIsion
             services.AddSingleton<ICameraDeviceService, CameraDomainService>();
             services.AddSingleton<ICameraAppService, CameraApplicationoService>();
 
-            // ====================== Presenter 工厂（可选）======================
-            // 注册 Presenter Factory 与 默认视图实现，方便通过 DI 装配窗体依赖
-            services.AddSingleton<IVisonPresenterFactor, VisionPresenterFactory>();
-            services.AddSingleton<IDeviceTreePresenterFactory, DeviceTreePresenterFactory>();
-            services.AddSingleton<IDeviceInfoPresenterFactory, DeviceInfoPresenterFactory>();
-            services.AddSingleton<IDeviceDetailPresenterFactory, DeviceDetailPresenterFactory>();
-
-            // 注册视图实现（UserControl）供构造函数注入使用，按窗体生命周期使用瞬时（每次解析新实例）
-            services.AddTransient<Solution.Presentation.Views.IDeviceDatailView, Solution.Presentation.UserControls.CameraDateilUC>();
-            services.AddTransient<Solution.Presentation.Views.IDeviceTreeView, Solution.Presentation.UserControls.DeviceTreeUC>();
-            services.AddTransient<Solution.Presentation.Views.IDeviceInfoParamView, Solution.Presentation.UserControls.DeviceInfoUC>();
-            services.AddTransient<Solution.Presentation.Views.IVisionView, Solution.Presentation.UserControls.UCVisionView>();
+            // ====================== 装配约定 ======================
+            // 容器只注册后台服务；视图与 Presenter 由宿主（Form1）唯一创建并绑定，
+            // 不从容器解析视图（避免多实例：Presenter 绑定实例与界面显示实例不一致）。
+            // Presenter 构造参数含运行时视图实例，因此也不注册到容器；
+            // 纯 new 转发的 Presenter 工厂已删除。
             // ====================== 基础设施层 ======================
             services.AddSingleton<IEventBus, EventBus>();
             services.AddSingleton<Solution.Domain.Contexts.IDeviceContext, DeviceContext>();

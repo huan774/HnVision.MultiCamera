@@ -1,5 +1,7 @@
 ﻿using MultiSerVIsion.Solution.Domain.Entities.Configs;
 using MultiSerVIsion.Solution.Domain.Models;
+using MultiSerVIsion.Solution.Domain.Enums;
+using MultiSerVIsion.Solution.Domain.Sources;
 using MultiSerVIsion.Solution.Infrastructure.HiKHardware;
 using MultiSerVIsion.Solution.Shared.Models;
 using System;
@@ -39,6 +41,29 @@ namespace MultiSerVIsion.Solution.Domain.Repositories
         /// <summary> /// 停止采流/// </summary>
         /// <param name="serialNumber">相机序列号</param>
         Task<OperationResult> StopStreamAsync(string serialNumber);
+
+        /// <summary>
+        /// 按采集模式显式设置触发源与触发模式（连续=关闭触发，软触发=开启触发）。
+        /// 【互斥】采集过程中不允许直接切换，需先停止采流，否则 SDK 配置不生效。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号。</param>
+        /// <param name="mode">目标采集模式。</param>
+        /// <returns>操作结果。</returns>
+        Task<OperationResult> SetAcquisitionModeAsync(string serialNumber, AcquisitionMode mode);
+
+        /// <summary>
+        /// 软件触发一次（仅在软触发模式下有效）。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号。</param>
+        /// <returns>操作结果；帧通过 IFrameSource 回调输出。</returns>
+        Task<OperationResult> SoftwareTriggerOnceAsync(string serialNumber);
+
+        /// <summary>
+        /// 获取指定序列号的图源（多相机各自独立）。
+        /// </summary>
+        /// <param name="serialNumber">相机序列号。</param>
+        /// <returns>图源实例；未连接返回 null。</returns>
+        IFrameSource GetFrameSource(string serialNumber);
         /// <summary>读取参数当前值</summary>
         Task<OperationResult<object>> GetParamAsync(string serialNumber, string paramName);
 

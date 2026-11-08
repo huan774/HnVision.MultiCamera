@@ -52,9 +52,9 @@
             this.btn_AddDevice,
             this.btn_DelDevice,
             this.btn_RefreshTress});
-            this.toolStrip1.Location = new System.Drawing.Point(1, 758);
+            this.toolStrip1.Location = new System.Drawing.Point(1, 744);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1315, 42);
+            this.toolStrip1.Size = new System.Drawing.Size(1315, 56);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -64,7 +64,7 @@
             this.btn_AddDevice.Image = ((System.Drawing.Image)(resources.GetObject("btn_AddDevice.Image")));
             this.btn_AddDevice.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_AddDevice.Name = "btn_AddDevice";
-            this.btn_AddDevice.Size = new System.Drawing.Size(52, 36);
+            this.btn_AddDevice.Size = new System.Drawing.Size(52, 50);
             this.btn_AddDevice.Text = "添加设备";
             // 
             // btn_DelDevice
@@ -73,7 +73,7 @@
             this.btn_DelDevice.Image = ((System.Drawing.Image)(resources.GetObject("btn_DelDevice.Image")));
             this.btn_DelDevice.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_DelDevice.Name = "btn_DelDevice";
-            this.btn_DelDevice.Size = new System.Drawing.Size(52, 36);
+            this.btn_DelDevice.Size = new System.Drawing.Size(52, 50);
             this.btn_DelDevice.Text = "移除设备";
             // 
             // btn_RefreshTress
@@ -82,7 +82,7 @@
             this.btn_RefreshTress.Image = ((System.Drawing.Image)(resources.GetObject("btn_RefreshTress.Image")));
             this.btn_RefreshTress.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_RefreshTress.Name = "btn_RefreshTress";
-            this.btn_RefreshTress.Size = new System.Drawing.Size(52, 36);
+            this.btn_RefreshTress.Size = new System.Drawing.Size(52, 50);
             this.btn_RefreshTress.Text = "刷新设备";
             this.btn_RefreshTress.Click += new System.EventHandler(this.btn_RefreshTress_Click);
             // 
@@ -93,7 +93,7 @@
             this.treeView_Device.Location = new System.Drawing.Point(1, 1);
             this.treeView_Device.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.treeView_Device.Name = "treeView_Device";
-            this.treeView_Device.Size = new System.Drawing.Size(1315, 757);
+            this.treeView_Device.Size = new System.Drawing.Size(1315, 743);
             this.treeView_Device.TabIndex = 1;
             this.treeView_Device.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_Device_AfterSelect);
             // 

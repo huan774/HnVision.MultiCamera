@@ -46,5 +46,28 @@ namespace MultiSerVIsion.Solution.Domain.Services
     /// 业务校验：参数配置是否符合业务范围
     /// </summary>
     OperationResult ValidateCameraConfig(CameraParamConfig config);
+
+    /// <summary>校验参数下发合法性（下发前二次校验，含范围与步长校验）。</summary>
+    /// <param name="device">目标相机实体。</param>
+    /// <param name="spec">参数规格（含目标值）。</param>
+    /// <returns>校验结果；不合法时 Message 说明原因。</returns>
+    OperationResult ValidateParameter(CameraEntity device, CameraParameterSpec spec);
+
+    /// <summary>将参数值限幅到 [Min, Max] 并按 Step 对齐（UI 限幅基准）。</summary>
+    /// <param name="spec">参数规格。</param>
+    /// <param name="rawValue">原始输入值。</param>
+    /// <returns>限幅并取整后的安全值（字符串形式）。</returns>
+    string ClampParameter(CameraParameterSpec spec, string rawValue);
+
+    /// <summary>校验是否允许切换采集模式（连续 / 软触发互斥，采流中禁止切换）。</summary>
+    /// <param name="device">目标相机实体。</param>
+    /// <param name="targetMode">目标采集模式。</param>
+    /// <returns>校验结果。</returns>
+    OperationResult ValidateCanSwitchAcquisitionMode(CameraEntity device, AcquisitionMode targetMode);
+
+    /// <summary>校验是否允许执行软触发单步（仅软触发模式且已连接）。</summary>
+    /// <param name="device">目标相机实体。</param>
+    /// <returns>校验结果。</returns>
+    OperationResult ValidateCanSoftwareTrigger(CameraEntity device);
     }
 }

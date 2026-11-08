@@ -31,5 +31,19 @@
 
         /// <summary>触发源（软触发 / 硬触发线路）</summary>
         public const string TriggerSource = "TriggerSource";
+
+        // ---------- 触发相关取值（以符号名写入，规避各机型枚举值不一致） ----------
+
+        /// <summary>触发模式：关闭（连续采集）</summary>
+        public const string TriggerModeOff = "Off";
+
+        /// <summary>触发模式：开启</summary>
+        public const string TriggerModeOn = "On";
+
+        /// <summary>触发源：软触发</summary>
+        public const string TriggerSourceSoftware = "Software";
+
+        /// <summary>软件触发命令节点</summary>
+        public const string TriggerSoftware = "TriggerSoftware";
     }
 }

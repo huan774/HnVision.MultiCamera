@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace MultiSerVIsion.Solution.Domain.Entities
 {
     [JsonDerivedType(typeof(CameraEntity), typeDiscriminator: "Camera")]
-    /*[JsonDerivedType(typeof(MotionDeviceEntity), typeDiscriminator: "MotionCard")]*/
     public abstract  class DeviceEntity
     {
         public string DeviceId {  get; set; }=string.Empty;

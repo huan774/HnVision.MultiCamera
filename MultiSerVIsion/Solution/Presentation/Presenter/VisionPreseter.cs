@@ -101,6 +101,18 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
         {
             if (string.IsNullOrEmpty(deviceId)) return;
 
+            // 触发模式决定「启动」含义：软触发/单步时每次点击只拍一张，
+            // 且不禁用按钮以便连续多次点击（无此判断时软触发与连续取流效果一致）。
+            if (await IsSoftTriggerModeAsync(deviceId))
+            {
+                // 仍需记录当前设备，否则帧会因设备过滤不匹配而被丢弃
+                _currentStreamingDeviceId = deviceId;
+
+                var onceResult = await _cameraAppService.SoftwareTriggerOnce(deviceId);
+                if (!onceResult.Success) _view.ShowMessage(onceResult.Message);
+                return;
+            }
+
             var result = await _cameraAppService.StartStream(deviceId);
             if (!result.Success)
             {
@@ -119,6 +131,22 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             _lastFpsUpdate = DateTime.Now;
           
         }
+        /// <summary>
+        /// 读取相机当前触发模式，判断是否处于软触发（单步）模式。
+        /// 【说明】以节点符号名判定，避免依赖具体枚举值；读取失败时按连续采集处理。
+        /// </summary>
+        /// <param name="deviceId">组态设备 ID</param>
+        /// <returns>触发模式为 On 时返回 true</returns>
+        private async Task<bool> IsSoftTriggerModeAsync(string deviceId)
+        {
+            var triggerMode = await _cameraAppService.GetParamAsync(deviceId, "TriggerMode");
+            if (!triggerMode.Success || triggerMode.Data == null) return false;
+
+            var symbol = triggerMode.Data.ToString();
+            return !string.IsNullOrEmpty(symbol) &&
+                   symbol.IndexOf("On", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private void StopCurrentStream()
         {
             if (!string.IsNullOrEmpty(_currentStreamingDeviceId))
@@ -235,26 +263,19 @@ namespace MultiSerVIsion.Solution.Presentation.Presenter
             if (frame?.Data == null || frame.Width <= 0 || frame.Height <= 0)
                 return null;
 
-            PixelFormat pixelFormat;
-            int stride;
-            switch (frame.PixelFormat)
-            {
-                case PixelFormatEnum.Mono8:
-                    pixelFormat = PixelFormat.Format8bppIndexed;
-                    stride = frame.Width;
-                    break;
-                case PixelFormatEnum.RGB24:
-                case PixelFormatEnum.BGR24:
-                    pixelFormat = PixelFormat.Format24bppRgb;
-                    stride = frame.Width * 3;
-                    break;
-                default:
-                    // 不支持的格式直接丢弃，避免构造出错误图像
-                    return null;
-            }
+            int pixelCount = frame.Width * frame.Height;
+            int byteCount = frame.Data.Length;
 
-            // 数据长度不足说明驱动转换失败并回退了原始数据，直接丢弃以免构造异常
-            if (frame.Data.Length < stride * frame.Height) return null;
+            // 按数据长度判定真实布局，而不依赖 PixelFormat 标记：
+            // 彩色相机经 SDK 转换后为 3 字节/像素，若标记与实际不一致会被旧逻辑整帧丢弃。
+            bool asColor = byteCount >= pixelCount * 3;
+            bool asGray = !asColor && byteCount >= pixelCount;
+
+            // 长度不足说明数据无效（可能是转换失败且回退数据不完整），丢弃该帧
+            if (!asColor && !asGray) return null;
+
+            var pixelFormat = asColor ? PixelFormat.Format24bppRgb : PixelFormat.Format8bppIndexed;
+            int stride = asColor ? frame.Width * 3 : frame.Width;
 
             var bitmap = new Bitmap(frame.Width, frame.Height, pixelFormat);
             if (pixelFormat == PixelFormat.Format8bppIndexed)

@@ -405,7 +405,6 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
         {
             treeView_Device.Nodes.Clear();
             treeView_Device.Nodes.Add("相机分组").Tag = "Group_Camera";
-            treeView_Device.Nodes.Add("运动轴分组").Tag = "Group_Motion";
             treeView_Device.Nodes.Add("局域网在线设备").Tag = "Group_Online";
             
         }
@@ -427,7 +426,7 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
             foreach (TreeNode node in treeView_Device.Nodes)
             {
                 string tag = node.Tag?.ToString();
-                if (tag is "Group_Camera" ||tag is "Group_Motion")
+                if (tag is "Group_Camera")
                     node.Nodes.Clear();
             }
 
@@ -438,9 +437,6 @@ namespace MultiSerVIsion.Solution.Presentation.UserControls
                 switch (dev.DeviceType) {
                     case "Camera":
                       groupTag=  "Group_Camera";
-                        break;
-                    case "MotionCard":
-                        groupTag = "Group_Motion";
                         break;
                     default:
                         groupTag = string.Empty;

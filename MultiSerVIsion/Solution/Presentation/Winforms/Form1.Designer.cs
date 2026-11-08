@@ -49,9 +49,7 @@
             this.split_inter = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPageMonitor = new System.Windows.Forms.TabPage();
             this.tabPageVision = new System.Windows.Forms.TabPage();
-            this.tabPageAlgorithm = new System.Windows.Forms.TabPage();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.tabPage7 = new System.Windows.Forms.TabPage();
@@ -279,9 +277,7 @@
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabPageMonitor);
             this.tabControl1.Controls.Add(this.tabPageVision);
-            this.tabControl1.Controls.Add(this.tabPageAlgorithm);
             this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Controls.Add(this.tabPage6);
             this.tabControl1.Controls.Add(this.tabPage7);
@@ -294,16 +290,6 @@
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             this.tabControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseDown);
             // 
-            // tabPageMonitor
-            // 
-            this.tabPageMonitor.Location = new System.Drawing.Point(10, 53);
-            this.tabPageMonitor.Name = "tabPageMonitor";
-            this.tabPageMonitor.Padding = new System.Windows.Forms.Padding(4);
-            this.tabPageMonitor.Size = new System.Drawing.Size(1101, 537);
-            this.tabPageMonitor.TabIndex = 0;
-            this.tabPageMonitor.Text = "运行监控";
-            this.tabPageMonitor.UseVisualStyleBackColor = true;
-            // 
             // tabPageVision
             // 
             this.tabPageVision.Location = new System.Drawing.Point(10, 53);
@@ -313,15 +299,6 @@
             this.tabPageVision.TabIndex = 1;
             this.tabPageVision.Text = "视觉图像";
             this.tabPageVision.UseVisualStyleBackColor = true;
-            // 
-            // tabPageAlgorithm
-            // 
-            this.tabPageAlgorithm.Location = new System.Drawing.Point(10, 53);
-            this.tabPageAlgorithm.Name = "tabPageAlgorithm";
-            this.tabPageAlgorithm.Size = new System.Drawing.Size(1101, 537);
-            this.tabPageAlgorithm.TabIndex = 3;
-            this.tabPageAlgorithm.Text = "算法配方";
-            this.tabPageAlgorithm.UseVisualStyleBackColor = true;
             // 
             // tabPage5
             // 
@@ -452,9 +429,7 @@
         private System.Windows.Forms.SplitContainer split_outer;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPageMonitor;
         private System.Windows.Forms.TabPage tabPageVision;
-        private System.Windows.Forms.TabPage tabPageAlgorithm;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.TabPage tabPage6;
         private System.Windows.Forms.TabPage tabPage7;
